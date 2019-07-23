@@ -83,14 +83,12 @@ import org.la4j.matrix.functor.MatrixAccumulator;
 @Plugin(type = Command.class, menuPath = "Plugins>AxoNet")
 public class AxoNet<T extends RealType<T>> implements Command {
 	
-	
-	
-		//define model identifiers
 		//private static final String MODEL_URL = "https://drive.google.com/uc?export=download&id=1eL-C3A1QOen3_2mfl2lb5IQhoDOkb7Qw"; //download link
 		//private static final String MODEL_NAME = "model_7";
 		//private static final String MODEL_TAG = "serve";  //check when saving model
 		//private static final String DEFAULT_SERVING_SIGNATURE_DEF_KEY ="serving_default"; //leave unchanged
-		//TODO add newest model version
+		
+		//define model identifiers
 		//explained in https://www.tensorflow.org/api_docs/python/tf/saved_model/simple_save
 		private static final String MODEL_URL = "https://drive.google.com/uc?export=download&id=1G20emdYbT2-VOpGjLsqaPqyFdXjTSs1W";  
 		//private static final String MODEL_URL = "https://drive.google.com/uc?export=download&id=1iBh4SjJErEgZogWf9kYhKX3l9F2lrO9T";;
@@ -109,16 +107,6 @@ public class AxoNet<T extends RealType<T>> implements Command {
 		@Parameter(label = "Optic Nerve Cross Section")
 		private Img<T> originalImage;
 		
-		/**@Parameter(label = "Number of tiles per row", persist = false,                  
-			*	 min = "1",
-			*	description = "<html>The number of tiles to split the image into per row. ")
-			*private int tileCountRow = 10;
-			*
-		*@Parameter(label = "Number of tiles per column", persist = false,                     
-		*	min = "1",
-		*	description = "<html>The number of tiles to to split the image into per column. ")
-		*private int tileCountCol = 10;
-		*/
 		
 		
 		
