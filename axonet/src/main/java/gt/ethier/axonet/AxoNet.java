@@ -92,7 +92,7 @@ public class AxoNet<T extends RealType<T>> implements Command {
 		//private static final String DEFAULT_SERVING_SIGNATURE_DEF_KEY ="serving_default"; //leave unchanged
 		//TODO add newest model version
 		//explained in https://www.tensorflow.org/api_docs/python/tf/saved_model/simple_save
-		private static final String MODEL_URL = "https://drive.google.com/uc?export=download&id=1BcQMi0ZuYGHOBPyb34yjD4DUD7uC6a2y";  
+		private static final String MODEL_URL = "https://drive.google.com/uc?export=download&id=1G20emdYbT2-VOpGjLsqaPqyFdXjTSs1W";  
 		//private static final String MODEL_URL = "https://drive.google.com/uc?export=download&id=1iBh4SjJErEgZogWf9kYhKX3l9F2lrO9T";;
 		private static final String MODEL_NAME = "model_3"; 
 		// Same as the tag used in export_saved_model in the Python code.
@@ -170,9 +170,11 @@ public class AxoNet<T extends RealType<T>> implements Command {
 			if (tileWidth%2!=0) { tileWidth=tileWidth-1;}
 			if (tileHeight%2!=0) { tileHeight=tileHeight-1;}
 			
+			
 			//define mirroring
-			int mirrorNheight = 8 + (32-(tileHeight+16)%32)/2; //8 minimum but adds to cover size issues on edges
-			int mirrorNwidth = 8 + (32-(tileWidth+16)%32)/2; //8 minimum but adds to cover size issues on edges
+			int mirrorMin = 16;
+			int mirrorNheight = mirrorMin + (32-(tileHeight+2*mirrorMin)%32)/2; //mirrorMin minimum but adds to cover size issues on edges
+			int mirrorNwidth = mirrorMin + (32-(tileWidth+2*mirrorMin)%32)/2; //mirrorMin minimum but adds to cover size issues on edges
 			
 			
 			
@@ -298,9 +300,13 @@ public class AxoNet<T extends RealType<T>> implements Command {
 					output.copyTo(dst);  // copy from tensor to java float array
 					outputArray[i][j] = Matrix.from2DArray(toDoubleArray(removeDims(dst))); //make matrix from double array and write it to our output array
 					
+					/*
+					//show tile results- for debugging
 					FloatProcessor tileP = new FloatProcessor((removeDims(dst)));
 					ImagePlus tileIm = new ImagePlus("output region", tileP);
 					tileIm.show();
+					*/
+					
 					
 					if (j==0) {
 						System.out.println(Double.toString(100*i/(tileCountRow)) + "% percent finished with applying model");
@@ -316,16 +322,17 @@ public class AxoNet<T extends RealType<T>> implements Command {
 			//TODO make this faster
 			Matrix fullOutput= Matrix.zero(height, width);
 			
+			/*
 			System.out.println("height = " + Integer.toString(height));
 			System.out.println("width = " + Integer.toString(width));
 			System.out.println("mirrorNheight = " + Integer.toString(mirrorNheight));
 			System.out.println("mirrorNwidth = " + Integer.toString(mirrorNwidth));
 			System.out.println("tileheight = " + Integer.toString(tileHeight));
 			System.out.println("tileWidth = " + Integer.toString(tileWidth));
-			
+			*/
 			
 			/*
-			 * Iterates over all outputs, indexes them to remove mirrored regions, and 
+			 * Iterates over all outputs, indexes them to remove mirrored regions, and restores to full size image
 			 * 
 			 */
 			System.out.println("\nRe-Unifying processed tiles...");
@@ -345,7 +352,7 @@ public class AxoNet<T extends RealType<T>> implements Command {
 			
 			fullOutput=fullOutput.divide(1000);
 			double sum = fullOutput.sum();
-			fullOutput=fullOutput.divide(fullOutput.max());
+			fullOutput=fullOutput.divide(fullOutput.max()*3/2 );
 			//convert this full matrix back to double array
 			fullOutput.multiply(Math.pow(2, 32)); //normalize to 32bit for the FloatProcessor and display
 			double[][] densityMap = fullOutput.transpose().toDenseMatrix().toArray(); //transpose back and make double array
