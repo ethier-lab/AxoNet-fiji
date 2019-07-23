@@ -165,19 +165,12 @@ public class AxoNet<T extends RealType<T>> implements Command {
 			int mirrorNwidth = mirrorMin + (32-(tileWidth+2*mirrorMin)%32)/2; //mirrorMin minimum but adds to cover size issues on edges
 			
 			
-			
-			
-			
-			
-			
 			//load model
 			SavedModelBundle model = getModel();
 			
 			//manipulate image
 			final int ndims = img.getNDimensions();
-			
-			
-			
+						
 			
 			//make image matrix- this transposes the image because of the way imageJ works.
 			double[][] imArray = toDoubleArray(grayscale.getFloatArray());
@@ -200,6 +193,7 @@ public class AxoNet<T extends RealType<T>> implements Command {
 			 */
 			
 			System.out.println("Splitting image into subregions...");
+			long start = System.nanoTime();
 			for (int i=0; i< tileCountRow; i++) {
 				for (int j=0; j< tileCountCol; j++) {
 					
@@ -218,11 +212,11 @@ public class AxoNet<T extends RealType<T>> implements Command {
 					
 					double tot=thisIm.sum();
 					if (tot>.90*tileWidth*tileHeight) {
-						//thisIm=thisIm; //leave this tile alone					
+						//leave this tile alone					
 					}
 					else {
 						double[] SumStd = modSumStd(thisIm);
-						System.out.println("tile intensity mean = " + Double.toString(SumStd[0]) + "tile intensity std = " + Double.toString(SumStd[1]));
+						//System.out.println("tile intensity mean = " + Double.toString(SumStd[0]) + "tile intensity std = " + Double.toString(SumStd[1]));
 						
 						thisIm=thisIm.subtract(SumStd[0]).divide(SumStd[1]*2);//.multiply(-1); //normalize
 					}
@@ -232,28 +226,23 @@ public class AxoNet<T extends RealType<T>> implements Command {
 					thisIm=mirrorer(thisIm, mirrorNheight, mirrorNwidth);
 					regionArray[i][j]=thisIm;
 					
-					//display tile
-					//FloatProcessor tileP = new FloatProcessor(toFloatArray(thisIm.toDenseMatrix().toArray()));
-					//ImagePlus tileIm = new ImagePlus("Tile region", tileP);
-					//tileIm.show();
-					
 					
 					if (j==0) {
-						System.out.println(Double.toString(100*i/(tileCountRow)) + "% percent finished with splitting full image");
-						System.out.println(thisIm.rows());
-						System.out.println(thisIm.columns());
+						System.out.println(Double.toString(100*i/(tileCountRow)) + "% percent finished with splitting full image.");
 					}
 					
 				}			
 				
 			}
-			
+			long finish=System.nanoTime();
+			System.out.println("100% finished with splitting full image. Time elapsed = " + Long.toString((finish-start)/1000000000) + " seconds.");
 			/*
 			 * Iterates over all split regions, converts them to tensor inputs, and applies the model 
 			 * 
 			 */
 			
-			System.out.println("100% finished with splitting full image.\n\nApplying model...");
+			System.out.println("\n\nApplying model...");
+			start = System.nanoTime();
 			Matrix[][] outputArray = new Matrix[tileCountRow][tileCountCol]; //this is an array of matrices
 			//input each part to model
 			for (int i=0; i< tileCountRow; i++) {
@@ -261,7 +250,6 @@ public class AxoNet<T extends RealType<T>> implements Command {
 					
 					//make input a tensor of undefined type and 4 dimensions
 					//makes Matrix-> DenseMatrix-> 2D float array -> 4D float array -> 4D tensor in one line
-					//
 					Tensor<?> input = Tensor.create(   addDims(toFloatArray(regionArray[i][j].toDenseMatrix().toArray()))    ); 
 					
 					//taken from microscopeImageFocusQualityClassifier
@@ -297,39 +285,38 @@ public class AxoNet<T extends RealType<T>> implements Command {
 					
 					
 					if (j==0) {
-						System.out.println(Double.toString(100*i/(tileCountRow)) + "% percent finished with applying model");
-						System.out.println(outputArray[i][j].rows());
-						System.out.println(outputArray[i][j].columns());
+						System.out.println(Double.toString(100*i/(tileCountRow)) + "% percent finished with applying model.");
 					}
 				}
 			}
+			finish=System.nanoTime();
 			
-			System.out.println("100% finished with applying model.\n");
+			System.out.println("100% finished with applying model. Time elapsed = " + Long.toString((finish-start)/1000000000) + " seconds.");
 			
 			//reconstruct full image- create full size zero matrix and use Matrix.insert() to write values where they are supposed to be
 			//TODO make this faster
 			Matrix fullOutput= Matrix.zero(height, width);
+			float[][] floatOutput = new float[height][width]; 
 			
-			/*
-			System.out.println("height = " + Integer.toString(height));
-			System.out.println("width = " + Integer.toString(width));
-			System.out.println("mirrorNheight = " + Integer.toString(mirrorNheight));
-			System.out.println("mirrorNwidth = " + Integer.toString(mirrorNwidth));
-			System.out.println("tileheight = " + Integer.toString(tileHeight));
-			System.out.println("tileWidth = " + Integer.toString(tileWidth));
-			*/
 			
 			/*
 			 * Iterates over all outputs, indexes them to remove mirrored regions, and restores to full size image
 			 * 
 			 */
+			//TODO this is faster than it was but still needs work
 			System.out.println("\nRe-Unifying processed tiles...");
 			for (int i=0; i< tileCountRow; i++) {
 				for (int j=0; j< tileCountCol; j++) {
-					//reverse mirroring
+					//reverse mirroring. slice goes up to but does not include the last value, so param 3 and 4 should not be one less than they are
 					outputArray[i][j]=outputArray[i][j].slice(mirrorNheight, mirrorNwidth, tileHeight+mirrorNheight, tileWidth+mirrorNwidth);
-					//TODO make this faster for large matrices
-					fullOutput = fullOutput.insert(outputArray[i][j], i*tileHeight, j*tileWidth, tileHeight, tileWidth );
+					float[][] slice = toFloatArray(outputArray[i][j].toDenseMatrix().toArray());
+					//fullOutput = fullOutput.insert(outputArray[i][j], i*tileHeight, j*tileWidth, tileHeight, tileWidth );
+					
+					for (int i1=0; i1< tileHeight; i1++) {
+						for (int j1=0; j1< tileWidth; j1++) {
+							floatOutput[i1+i*tileHeight][j1+j*tileWidth]=slice[i1][j1];
+						}
+					}
 					
 					if (j==0) {
 						System.out.println(Double.toString(100*i/(tileCountRow)) + "% percent finished with re-unifying tiles");
@@ -337,7 +324,7 @@ public class AxoNet<T extends RealType<T>> implements Command {
 				}
 			}
 			System.out.println("100% finished with re-unifying tiles.\n");
-			
+			fullOutput=Matrix.from2DArray(toDoubleArray(floatOutput));
 			fullOutput=fullOutput.divide(1000);
 			double sum = fullOutput.sum();
 			fullOutput=fullOutput.divide(fullOutput.max()*3/2 );
