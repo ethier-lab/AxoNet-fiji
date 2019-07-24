@@ -8,7 +8,6 @@ import org.scijava.widget.FileWidget;
 
 import com.sun.xml.internal.bind.CycleRecoverable.Context;
 
-import ij.IJ;
 
 /**
  * test AxoNet command.
@@ -29,8 +28,7 @@ public final class Main {
 		ij.ui().show(data);
 		Context.class.getName();
 		// Run the command.
-				ij.command().run(AxoNet.class, true);
-		//ij.quit(); //TODO somehow...
+		ij.command().run(AxoNet_.class, true);
 	}
 }
 

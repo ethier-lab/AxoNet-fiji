@@ -86,14 +86,12 @@ import org.la4j.matrix.functor.MatrixAccumulator;
 //@Plugin(type = Command.class, menuPath = "Plugins>AxoNet_")
 @Plugin(type = Command.class, menuPath = "Plugins>AxoNet")
 public class AxoNet_<T extends RealType<T>> implements Command {
-	
-
-	
 		
 		//define model identifiers
 		//explained in https://www.tensorflow.org/api_docs/python/tf/saved_model/simple_save
-		private static final String MODEL_URL = "https://drive.google.com/uc?export=download&id=1G20emdYbT2-VOpGjLsqaPqyFdXjTSs1W";  
-		//private static final String MODEL_URL = "https://drive.google.com/uc?export=download&id=1iBh4SjJErEgZogWf9kYhKX3l9F2lrO9T";;
+		//private static final String MODEL_URL = "https://drive.google.com/uc?export=download&id=1G20emdYbT2-VOpGjLsqaPqyFdXjTSs1W";
+		private static final String MODEL_URL = "https://drive.google.com/uc?export=download&id=1rGN47Pgq-XPolb8CnOX8n3G3lg550xwF";
+		//private static final String MODEL_URL = "https://drive.google.com/uc?export=download&id=1G20emdYbT2-VOpGjLsqaPqyFdXjTSs1W";;
 		private static final String MODEL_NAME = "model_3"; 
 		// Same as the tag used in export_saved_model in the Python code.
 		private static final String MODEL_TAG = "serve";  //check when saving model
@@ -151,6 +149,7 @@ public class AxoNet_<T extends RealType<T>> implements Command {
 			catch (Exception e) {
 				String msg = ("make sure you set your image's scale properly.\nImage was not able to be resized.\n");
 				log.log(LogLevel.INFO, msg);
+				//log.info(msg);
 			}
 			
 			height = grayscale.getHeight();
@@ -205,6 +204,7 @@ public class AxoNet_<T extends RealType<T>> implements Command {
 			//System.out.println("Splitting image into subregions...");
 			String msg = ("Splitting image into subregions...");
 			log.log(LogLevel.INFO, msg);
+			//log.info(msg);
 			long start = System.nanoTime();
 			for (int i=0; i< tileCountRow; i++) {
 				for (int j=0; j< tileCountCol; j++) {
@@ -242,6 +242,7 @@ public class AxoNet_<T extends RealType<T>> implements Command {
 					if (j==0) {
 						//System.out.println(Double.toString(100*i/(tileCountRow)) + "% percent finished with splitting full image.");
 						msg = (Double.toString(100*i/(tileCountRow)) + "% percent finished with splitting full image.");
+						//log.info(msg);
 						log.log(LogLevel.INFO, msg);
 					}
 					
@@ -252,6 +253,7 @@ public class AxoNet_<T extends RealType<T>> implements Command {
 			//System.out.println("100% finished with splitting full image. Time elapsed = " + Long.toString((finish-start)/1000000000) + " seconds.");
 			msg = ("100% finished with splitting full image. Time elapsed = " + Long.toString((finish-start)/1000000000) + " seconds.");
 			log.log(LogLevel.INFO, msg);
+			//log.info(msg);
 			/*
 			 * Iterates over all split regions, converts them to tensor inputs, and applies the model 
 			 * 
@@ -260,6 +262,7 @@ public class AxoNet_<T extends RealType<T>> implements Command {
 			//System.out.println("\n\nApplying model...");
 			msg = ("\n\nApplying model...");
 			log.log(LogLevel.INFO, msg);
+			//log.info(msg);
 			
 			start = System.nanoTime();
 			Matrix[][] outputArray = new Matrix[tileCountRow][tileCountCol]; //this is an array of matrices
@@ -307,6 +310,7 @@ public class AxoNet_<T extends RealType<T>> implements Command {
 						//System.out.println(Double.toString(100*i/(tileCountRow)) + "% percent finished with applying model.");
 						msg = (Double.toString(100*i/(tileCountRow)) + "% percent finished with applying model.");
 						log.log(LogLevel.INFO, msg);
+						//log.info(msg);
 					}
 				}
 			}
@@ -315,6 +319,7 @@ public class AxoNet_<T extends RealType<T>> implements Command {
 			//System.out.println("100% finished with applying model. Time elapsed = " + Long.toString((finish-start)/1000000000) + " seconds.");
 			msg = ("100% finished with applying model. Time elapsed = " + Long.toString((finish-start)/1000000000) + " seconds.");
 			log.log(LogLevel.INFO, msg);
+			//log.info(msg);
 			
 			//reconstruct full image- create full size zero matrix and use Matrix.insert() to write values where they are supposed to be
 			//TODO make this faster
@@ -364,6 +369,7 @@ public class AxoNet_<T extends RealType<T>> implements Command {
 			//System.out.println ("Total count = " + Double.toString(sum));
 			msg = ("Total count = " + Double.toString(sum));
 			log.log(LogLevel.INFO, msg);
+			//log.info(msg);
 			
 			display.show();
 		}
@@ -440,6 +446,7 @@ public class AxoNet_<T extends RealType<T>> implements Command {
 		
 		 private static SavedModelBundle getModel() {
 				//load model
+			 	//TODO fix
 				HTTPLocation source = null;
 				SavedModelBundle model = null;
 				try {source = new HTTPLocation(MODEL_URL);} catch (final Exception e) {log.error(e);}
