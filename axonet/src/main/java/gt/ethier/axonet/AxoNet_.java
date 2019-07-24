@@ -7,12 +7,14 @@ import ij.gui.Overlay;
 import ij.gui.Roi;
 import ij.gui.TextRoi;
 import ij.measure.Calibration;
+import ij.plugin.PlugIn;
 import ij.IJ;
 import ij.WindowManager;
 import ij.process.ImageProcessor;
 import ij.CommandListener;
 import ij.process.FloatProcessor;
 import ij.process.ImageConverter;
+import ij.plugin.PlugIn;
 
 import java.awt.Color;
 import java.io.IOException;
@@ -47,6 +49,7 @@ import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.widget.NumberWidget;
+import org.scijava.log.LogLevel;
 import org.tensorflow.SavedModelBundle;
 import org.tensorflow.Tensor;
 //import org.tensorflow.Tensors;
@@ -80,13 +83,12 @@ import org.la4j.matrix.functor.MatrixAccumulator;
 
 @SuppressWarnings("unused")
 
+//@Plugin(type = Command.class, menuPath = "Plugins>AxoNet_")
 @Plugin(type = Command.class, menuPath = "Plugins>AxoNet")
-public class AxoNet<T extends RealType<T>> implements Command {
+public class AxoNet_<T extends RealType<T>> implements Command {
 	
-		//private static final String MODEL_URL = "https://drive.google.com/uc?export=download&id=1eL-C3A1QOen3_2mfl2lb5IQhoDOkb7Qw"; //download link
-		//private static final String MODEL_NAME = "model_7";
-		//private static final String MODEL_TAG = "serve";  //check when saving model
-		//private static final String DEFAULT_SERVING_SIGNATURE_DEF_KEY ="serving_default"; //leave unchanged
+
+	
 		
 		//define model identifiers
 		//explained in https://www.tensorflow.org/api_docs/python/tf/saved_model/simple_save
@@ -96,7 +98,7 @@ public class AxoNet<T extends RealType<T>> implements Command {
 		// Same as the tag used in export_saved_model in the Python code.
 		private static final String MODEL_TAG = "serve";  //check when saving model
 		private static final String DEFAULT_SERVING_SIGNATURE_DEF_KEY ="serving_default"; //leave unchanged
-		private static final int TILE_SIZE =256; //mess with this to optimize performance. revisit to possibly do whole thing in one swoop- measure memory needed
+		private static final int TILE_SIZE =256; //mess with this to optimize performance. Should keep around this size, must be multiple of 32.
 		//define services for our plugin
 		@Parameter
 		private static TensorFlowService tensorFlowService; //service for working with tensorflow    https://javadoc.scijava.org/ImageJ/net/imagej/tensorflow/TensorFlowService.html
@@ -104,8 +106,8 @@ public class AxoNet<T extends RealType<T>> implements Command {
 		private DatasetService datasetService; //service for working with datasets    https://javadoc.scijava.org/ImageJ/net/imagej/DatasetService.html	
 		@Parameter
 		private static LogService log; //sets up log service	
-		@Parameter(label = "Optic Nerve Cross Section")
-		private Img<T> originalImage;
+		//@Parameter(label = "Optic Nerve Cross Section")
+		//private Img<T> originalImage;
 		
 		
 		
@@ -142,7 +144,15 @@ public class AxoNet<T extends RealType<T>> implements Command {
 			double compensate = 15.7/scale;
 			
 			//rescale, redefine total height and width, and set tile sizes
-			grayscale.resize((int) compensate*width, (int) compensate*height);
+			//TODO add input here from user to correct scale
+			try {
+				grayscale.resize((int) compensate*width, (int) compensate*height);
+			}
+			catch (Exception e) {
+				String msg = ("make sure you set your image's scale properly.\nImage was not able to be resized.\n");
+				log.log(LogLevel.INFO, msg);
+			}
+			
 			height = grayscale.getHeight();
 			width = grayscale.getWidth();
 			
@@ -192,7 +202,9 @@ public class AxoNet<T extends RealType<T>> implements Command {
 			 * 
 			 */
 			
-			System.out.println("Splitting image into subregions...");
+			//System.out.println("Splitting image into subregions...");
+			String msg = ("Splitting image into subregions...");
+			log.log(LogLevel.INFO, msg);
 			long start = System.nanoTime();
 			for (int i=0; i< tileCountRow; i++) {
 				for (int j=0; j< tileCountCol; j++) {
@@ -228,20 +240,27 @@ public class AxoNet<T extends RealType<T>> implements Command {
 					
 					
 					if (j==0) {
-						System.out.println(Double.toString(100*i/(tileCountRow)) + "% percent finished with splitting full image.");
+						//System.out.println(Double.toString(100*i/(tileCountRow)) + "% percent finished with splitting full image.");
+						msg = (Double.toString(100*i/(tileCountRow)) + "% percent finished with splitting full image.");
+						log.log(LogLevel.INFO, msg);
 					}
 					
 				}			
 				
 			}
 			long finish=System.nanoTime();
-			System.out.println("100% finished with splitting full image. Time elapsed = " + Long.toString((finish-start)/1000000000) + " seconds.");
+			//System.out.println("100% finished with splitting full image. Time elapsed = " + Long.toString((finish-start)/1000000000) + " seconds.");
+			msg = ("100% finished with splitting full image. Time elapsed = " + Long.toString((finish-start)/1000000000) + " seconds.");
+			log.log(LogLevel.INFO, msg);
 			/*
 			 * Iterates over all split regions, converts them to tensor inputs, and applies the model 
 			 * 
 			 */
 			
-			System.out.println("\n\nApplying model...");
+			//System.out.println("\n\nApplying model...");
+			msg = ("\n\nApplying model...");
+			log.log(LogLevel.INFO, msg);
+			
 			start = System.nanoTime();
 			Matrix[][] outputArray = new Matrix[tileCountRow][tileCountCol]; //this is an array of matrices
 			//input each part to model
@@ -285,13 +304,17 @@ public class AxoNet<T extends RealType<T>> implements Command {
 					
 					
 					if (j==0) {
-						System.out.println(Double.toString(100*i/(tileCountRow)) + "% percent finished with applying model.");
+						//System.out.println(Double.toString(100*i/(tileCountRow)) + "% percent finished with applying model.");
+						msg = (Double.toString(100*i/(tileCountRow)) + "% percent finished with applying model.");
+						log.log(LogLevel.INFO, msg);
 					}
 				}
 			}
 			finish=System.nanoTime();
 			
-			System.out.println("100% finished with applying model. Time elapsed = " + Long.toString((finish-start)/1000000000) + " seconds.");
+			//System.out.println("100% finished with applying model. Time elapsed = " + Long.toString((finish-start)/1000000000) + " seconds.");
+			msg = ("100% finished with applying model. Time elapsed = " + Long.toString((finish-start)/1000000000) + " seconds.");
+			log.log(LogLevel.INFO, msg);
 			
 			//reconstruct full image- create full size zero matrix and use Matrix.insert() to write values where they are supposed to be
 			//TODO make this faster
@@ -304,7 +327,8 @@ public class AxoNet<T extends RealType<T>> implements Command {
 			 * 
 			 */
 			//TODO this is faster than it was but still needs work
-			System.out.println("\nRe-Unifying processed tiles...");
+			System.out.println("\nRe-Unifying processed tiles...\n\n");
+			start=System.nanoTime();
 			for (int i=0; i< tileCountRow; i++) {
 				for (int j=0; j< tileCountCol; j++) {
 					//reverse mirroring. slice goes up to but does not include the last value, so param 3 and 4 should not be one less than they are
@@ -319,11 +343,12 @@ public class AxoNet<T extends RealType<T>> implements Command {
 					}
 					
 					if (j==0) {
-						System.out.println(Double.toString(100*i/(tileCountRow)) + "% percent finished with re-unifying tiles");
+						//System.out.println(Double.toString(100*i/(tileCountRow)) + "% percent finished with re-unifying tiles");
 					}
 				}
 			}
-			System.out.println("100% finished with re-unifying tiles.\n");
+			finish=System.nanoTime();
+			//System.out.println("100% finished with re-unifying tiles. Time elapsed = " + Long.toString((finish-start)/1000000000) + " seconds.\n");
 			fullOutput=Matrix.from2DArray(toDoubleArray(floatOutput));
 			fullOutput=fullOutput.divide(1000);
 			double sum = fullOutput.sum();
@@ -336,8 +361,10 @@ public class AxoNet<T extends RealType<T>> implements Command {
 			FloatProcessor densityMapFlp = new FloatProcessor(toFloatArray(densityMap));
 			ImagePlus display = new ImagePlus("Count Density Map", densityMapFlp);
 			
-			//log.log(log.getLevel()-1, "Total count = " + Double.toString(sum) );
-			System.out.println ("Total count = " + Double.toString(sum));
+			//System.out.println ("Total count = " + Double.toString(sum));
+			msg = ("Total count = " + Double.toString(sum));
+			log.log(LogLevel.INFO, msg);
+			
 			display.show();
 		}
 			
