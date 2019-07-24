@@ -2,86 +2,41 @@ package gt.ethier.axonet;
 
 
 import ij.ImagePlus;
-import ij.gui.Line;
-import ij.gui.Overlay;
-import ij.gui.Roi;
-import ij.gui.TextRoi;
 import ij.measure.Calibration;
-import ij.plugin.PlugIn;
-import ij.IJ;
 import ij.WindowManager;
 import ij.process.ImageProcessor;
-import ij.CommandListener;
 import ij.process.FloatProcessor;
 import ij.process.ImageConverter;
-import ij.plugin.PlugIn;
 
-import java.awt.Color;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.Arrays;
 import java.util.List;
-import java.nio.DoubleBuffer;
 
-import net.imagej.Dataset;
 import net.imagej.DatasetService;
-import net.imagej.ImgPlus;
-import net.imagej.axis.Axes;
-import net.imagej.axis.AxisType;
-import net.imagej.display.ColorTables;
 import net.imagej.tensorflow.TensorFlowService;
-import net.imagej.tensorflow.Tensors;
-import net.imglib2.RandomAccess;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.display.ColorTable8;
-import net.imglib2.img.Img;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
-import net.imglib2.type.numeric.real.FloatType;
 
-import org.scijava.Initializable;
-import org.scijava.ItemIO;
 import org.scijava.command.Command;
-import org.scijava.command.Previewable;
 import org.scijava.io.http.HTTPLocation;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.widget.NumberWidget;
 import org.scijava.log.LogLevel;
+
 import org.tensorflow.SavedModelBundle;
 import org.tensorflow.Tensor;
-//import org.tensorflow.Tensors;
 import org.tensorflow.framework.MetaGraphDef;
 import org.tensorflow.framework.SignatureDef;
 import org.tensorflow.framework.TensorInfo;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 import java.util.Objects;
 
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.converter.Converter;
-import net.imglib2.converter.Converters;
-import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.real.FloatType;
-import net.imglib2.util.Util;
-import net.imglib2.view.IntervalView;
-import net.imglib2.view.Views;
-import net.imglib2.realtransform.Scale;
 
-import org.la4j.Matrices;
 import org.la4j.Matrix;
 import org.la4j.Vector;
-import org.la4j.matrix.functor.MatrixAccumulator;
 
 
 
-@SuppressWarnings("unused")
 
 //@Plugin(type = Command.class, menuPath = "Plugins>AxoNet_")
 @Plugin(type = Command.class, menuPath = "Plugins>AxoNet")
@@ -107,11 +62,24 @@ public class AxoNet_<T extends RealType<T>> implements Command {
 		//@Parameter(label = "Optic Nerve Cross Section")
 		//private Img<T> originalImage;
 		
-		
-		
+		//TODO add these
+		/*
+		@Parameter(label = "<html>Do you want a grid overlay on the final full count display? " + "This may help with viewing a large image's results.", persist = false,                          
+				description = "<html>Do you want a grid overlay on the final full count display? " +
+					"This may help with viewing a large image's results.")
+			private boolean grid = true;
+		@Parameter(label = "<html>Do you want a .csv output file of the pixelwise count densities used to calculate the full count?", persist = false,                          
+				description = "<html> prints result count density to .csv in home folder")
+			private boolean csvOut = true;
+		*/
 		
 		@Override
 		public void run() {
+			
+			
+			
+			
+			
 			//load image
 			ImagePlus img = WindowManager.getCurrentImage(); 
 			
@@ -372,6 +340,16 @@ public class AxoNet_<T extends RealType<T>> implements Command {
 			//log.info(msg);
 			
 			display.show();
+			
+			
+			
+			//TODO apply grid
+			/*
+			if (grid) {
+				
+			}
+			*/
+			
 		}
 			
 		
