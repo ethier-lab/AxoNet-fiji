@@ -1,11 +1,3 @@
 language: java
-jdk: openjdk8
-branches:
-  only:
-  - master
-  - "/.*-[0-9]+\\..*/"
-install: true
-script: ".travis/build.sh"
-cache:
-  directories:
-  - "~/.m2/repository"
+jdk:
+  - oraclejdk12
