@@ -13,7 +13,7 @@ Installation Instructions:
 		-Double click on the **"Host"** field and enter the host as **"webdav:Mritch3"**  
 	-Close the **"manage update sites"** window and click **"Apply changes"**    
 3. Restart Fiji  
-4. Load an image by dragging it to the Fiji window.  
+4. Load an image by dragging its file to the Fiji window.  
 	-Your image may be any size!  
 5. Find AxoNet under **"Plugins"** on the Fiji toolbar  
 	-This may be towards the bottom of the drop-down menu (you may have to scroll down).    
