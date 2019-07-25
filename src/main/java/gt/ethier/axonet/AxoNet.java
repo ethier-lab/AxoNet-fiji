@@ -40,7 +40,7 @@ import org.la4j.Vector;
 
 
 //@Plugin(type = Command.class, menuPath = "Plugins>AxoNet")
-@Plugin(type = Command.class, menuPath = "Plugins > AxoNet", selectable = true, priority = Priority.EXTREMELY_HIGH )
+@Plugin(type = Command.class, menuPath = "Plugins>AxoNet", priority = Priority.EXTREMELY_HIGH )
 public class AxoNet implements Command {
 		
 		//define model identifiers
