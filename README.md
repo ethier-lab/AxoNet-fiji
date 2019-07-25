@@ -15,8 +15,8 @@ Installation Instructions:
 3. Restart Fiji  
 4. Load an image by dragging its file to the Fiji window.  
 	-Your image may be any size!  
-5. Find AxoNet under **"Plugins"** on the Fiji toolbar  
-	-This may be towards the bottom of the drop-down menu (you may have to scroll down).    
+5. Find AxoNet in the bottom of the **"Plugins"** menu on the Fiji toolbar  
+	-This is towards the bottom of the drop-down menu (you have to scroll down by clicking the arrow on the bottom).    
  	-Click **AxoNet** to run!  
 
 
