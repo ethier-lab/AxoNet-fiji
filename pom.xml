@@ -13,11 +13,11 @@
   </parent>
 
   <groupId>gt.ethier.axonet</groupId>
-  <artifactId>axonet-fiji</artifactId>
+  <artifactId>AxoNet</artifactId>
   <version>0.1.0</version>
 
-  <name>axonet</name>
-  <url>https://github.com/matthew-ritch/AxoNet</url>
+  <name>AxoNet</name>
+  <url>https://github.com/matthew-ritch/AxoNet-fiji</url>
   <inceptionYear>2019</inceptionYear>
   <description>ImageJ plugin to apply AxoNet for axon counting.</description>
   <organization>
@@ -56,7 +56,7 @@
 	</ciManagement>
 
 	<properties>
-		<main-class>gt.ethier.axonet.Main</main-class>
+		<main-class>gt.ethier.axonet.AxoNet</main-class>
 		<package-name>gt.ethier.axonet</package-name>
 		<license.licenseName>apache_v2</license.licenseName>
 		<license.copyrightOwners>The Georgia Institute of Technology and the Board of Regents of the University System of Georiga.</license.copyrightOwners>
@@ -147,13 +147,23 @@
 
 
 
-
-
-
   <build>
     <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
       <plugins>
         <!-- clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
+        <plugin>
+      <artifactId>maven-assembly-plugin</artifactId>
+      <configuration>
+        <archive>
+          <manifest>
+            <mainClass>gt.ethier.axonet.AxoNet</mainClass>
+          </manifest>
+        </archive>
+        <descriptorRefs>
+          <descriptorRef>jar-with-dependencies</descriptorRef>
+        </descriptorRefs>
+      </configuration>
+    </plugin>
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
           <version>3.1.0</version>

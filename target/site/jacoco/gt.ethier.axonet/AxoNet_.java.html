@@ -12,7 +12,7 @@ import java.util.List;
 
 import net.imagej.DatasetService;
 import net.imagej.tensorflow.TensorFlowService;
-import net.imglib2.type.numeric.RealType;
+//import net.imglib2.type.numeric.RealType;
 
 import org.scijava.command.Command;
 import org.scijava.io.http.HTTPLocation;
@@ -39,8 +39,8 @@ import org.la4j.Vector;
 
 
 //@Plugin(type = Command.class, menuPath = &quot;Plugins&gt;AxoNet_&quot;)
-@Plugin(type = Command.class, menuPath = &quot;Plugins&gt;AxoNet&quot;)
-<span class="nc" id="L43">public class AxoNet_&lt;T extends RealType&lt;T&gt;&gt; implements Command {</span>
+@Plugin(type = Command.class, menuPath = &quot;Plugins &gt; AxoNet_&quot;, selectable = true)
+<span class="nc" id="L43">public class AxoNet_ implements Command {</span>
 		
 		//define model identifiers
 		//explained in https://www.tensorflow.org/api_docs/python/tf/saved_model/simple_save
