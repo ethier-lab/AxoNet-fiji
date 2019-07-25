@@ -6,7 +6,7 @@ Installation Instructions:
 	-If you already have Fiji installed, update it to the most recent version  
 2. Navigate to **"Help > "Update..."** on the Fiji toolbar to add AxoNet and Tensorflow to your update sites   
 	-Click "Manage update sites"  
-	-Scroll down and check **"TensorFlow"**   
+	-Scroll down and click the check box next to **"TensorFlow"**   
 	-Click **"Add update site"**  
 		-Add **"http://sites.imagej.net/Mritch3/"** to the URL tab  
 		-Double click on the **"Name"** field and name the new site **"AxoNet"**  
