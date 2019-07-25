@@ -338,11 +338,12 @@ public class AxoNet implements Command {
 			display.show();
 			
 			//Make results window
+			
 			ResultsTable show = new ResultsTable();
 			show.incrementCounter();
 			show.addValue(0, sum);
 			show.addLabel("Image Axon Count");
-			show.updateResults();
+			//show.updateResults();
 			show.show("Axon Count Results");
 			
 			//TODO apply grid

@@ -9,7 +9,7 @@ Installation Instructions:
   -Scroll down and check "TensorFlow"
   -Click "Apply Changes"
 3. Download "AxoNet-0.1.0.jar" from this repository
-4. Download "la4j-0.6.0.jar" from https://repo1.maven.org/maven2/org/la4j/la4j/0.6.0/la4j-0.6.0.jar
+4. Download "la4j-0.6.0.jar" from https://repo1.maven.org/maven2/org/la4j/la4j/0.6.0/la4j-0.6.0.jar or this repository
 5. Navigate to "Plugins > Install PlugIn..." on the Fiji toolbar
 6. Install both the AxoNet and la4j jars
 7. Restart Fiji
