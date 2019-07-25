@@ -8,7 +8,7 @@ Installation Instructions:
 	-Click "Manage update sites"  
 	-Scroll down and check "TensorFlow"   
 	-Click "Add update site"  
-	-Name the new site "AxoNet", add "http://sites.imagej.net/Mritch3/" to the URL tab, and add "webdav:Mritch3" to the Host tab    
+	-Add "http://sites.imagej.net/Mritch3/" to the URL tab, name the new site "AxoNet", and add "webdav:Mritch3" to the Host tab    
 	-Close the "manage update sites" window and click "Apply changes"    
 3. Restart Fiji/ImageJ  
 4. Load an image and run AxoNet!  
