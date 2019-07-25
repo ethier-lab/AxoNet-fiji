@@ -16,7 +16,7 @@ import org.scijava.widget.FileWidget;
 public final class Main {
 
 	public static void main(final String[] args) throws IOException {
-		BasicConfigurator.configure();
+		//BasicConfigurator.configure();
 		// Launch ImageJ.
 		final ImageJ ij = new ImageJ();
 		ij.launch();

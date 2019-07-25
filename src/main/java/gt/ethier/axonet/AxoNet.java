@@ -7,7 +7,6 @@ import ij.measure.ResultsTable;
 import ij.WindowManager;
 import ij.process.ImageProcessor;
 import ij.process.FloatProcessor;
-import ij.process.ImageConverter;
 
 import java.util.List;
 
@@ -19,7 +18,6 @@ import org.scijava.Priority;
 import org.scijava.command.Command;
 import org.scijava.io.http.HTTPLocation;
 import org.scijava.log.LogService;
-import org.scijava.log.StderrLogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.log.LogLevel;
@@ -48,8 +46,8 @@ public class AxoNet implements Command {
 		//define model identifiers
 		//explained in https://www.tensorflow.org/api_docs/python/tf/saved_model/simple_save
 		//private static final String MODEL_URL = "https://drive.google.com/uc?export=download&id=1G20emdYbT2-VOpGjLsqaPqyFdXjTSs1W";
-		private static final String MODEL_URL = "https://drive.google.com/uc?export=download&id=1rGN47Pgq-XPolb8CnOX8n3G3lg550xwF";
-		//private static final String MODEL_URL = "https://drive.google.com/uc?export=download&id=1G20emdYbT2-VOpGjLsqaPqyFdXjTSs1W";;
+		//private static final String MODEL_URL = "https://drive.google.com/uc?export=download&id=1rGN47Pgq-XPolb8CnOX8n3G3lg550xwF";
+		private static final String MODEL_URL = "https://github.com/matthew-ritch/AxoNet-fiji/raw/master/AxoNet-model.zip";
 		private static final String MODEL_NAME = "model_3"; 
 		// Same as the tag used in export_saved_model in the Python code.
 		private static final String MODEL_TAG = "serve";  //check when saving model
@@ -79,34 +77,39 @@ public class AxoNet implements Command {
 		@Override
 		public void run() {
 			
+			//display error level to get the log to open
 			log.error("Opening log window...\n");
 			log.log(LogLevel.INFO, "AxoNet is running now!");
 			//load image
 			ImagePlus img = WindowManager.getCurrentImage(); 
-			
+			//warn if no image is loaded
 			if (Objects.isNull(img)) {
 				log.error("Load an image before running the plugin");
 			}
-			
 			ImageProcessor imp = img.getProcessor(); 
-			
+			//open greyscale version, close original version
 			ImagePlus progress = new ImagePlus("Running AxoNet", imp);
 			ImageProcessor grayscale = imp.convertToFloat();
 			progress.setProcessor(grayscale);
 			img.close();
 			progress.show();
 			
-			//check scale
-			//set to default if scale is 0 TODO make this more robust
+			//check scale from input
+			//set to default = 15.7 if scale is 0.
 			Calibration cal = img.getCalibration(); 
 			double scale = 15.7;
 			if (cal.pixelWidth != 0) {
 				scale = 1.0 / cal.pixelWidth;
 			}
+			else {
+				String msg = ("Make sure you set your image's scale properly.\nDefaulting to a scale of 15.7 pixels/micron.\n");
+				log.log(LogLevel.INFO, msg);
+			}
 			
-			//define sizing 
+			//define full image sizing 
 			int height = grayscale.getHeight();
 			int width = grayscale.getWidth();
+			//amout to scale by to return to 15.7 pixels/micron, as needed by the model
 			double compensate = 15.7/scale;
 			
 			//rescale, redefine total height and width, and set tile sizes
@@ -115,47 +118,45 @@ public class AxoNet implements Command {
 				grayscale.resize((int) compensate*width, (int) compensate*height);
 			}
 			catch (Exception e) {
-				String msg = ("Make sure you set your image's scale properly.\nImage was not able to be resized. Defaulting to a scale of 15.7 pixels/micron.\n");
+				String msg = ("Image was not resized.\n");
 				log.log(LogLevel.INFO, msg);
-				//log.info(msg);
 			}
 			
+			//redefine full iamge sizing after scaling
 			height = grayscale.getHeight();
 			width = grayscale.getWidth();
-			
+			//define tile sizes
 			int tileCountRow = Math.round(height/TILE_SIZE);
 			int tileCountCol = Math.round(width/TILE_SIZE);
 			if (tileCountRow==0) { tileCountRow=1;}
 			if (tileCountCol==0) { tileCountCol=1;}
-			
-			
-			//TODO this might leave off 1 - tileCount(Row/Col) pixels on any side. correct if this becomes an issue
 			int tileWidth = (int) Math.floor(width/tileCountCol);
 			int tileHeight = (int) Math.floor(height/tileCountRow);
 			if (tileWidth%2!=0) { tileWidth=tileWidth-1;}
 			if (tileHeight%2!=0) { tileHeight=tileHeight-1;}
 			
 			
-			//define mirroring
+			//define mirror size
 			int mirrorMin = 16;
 			int mirrorNheight = mirrorMin + (32-(tileHeight+2*mirrorMin)%32)/2; //mirrorMin minimum but adds to cover size issues on edges
 			int mirrorNwidth = mirrorMin + (32-(tileWidth+2*mirrorMin)%32)/2; //mirrorMin minimum but adds to cover size issues on edges
 			
 			
-			//load model
+			//load model from github download link
+			log.log(LogLevel.INFO, "Getting the AxoNet model ready...");
 			SavedModelBundle model = getModel();
 						
 			
-			//make image matrix- this transposes the image because of the way imageJ works.
+			//make image matrix- casting an imagePlus to a float array. ImageJ indexes images as [x][y], so the output array is float[width][height]. We transpose this for [rows][cols] convention.
 			double[][] imArray = toDoubleArray(grayscale.getFloatArray());
-			
 			Matrix imMat = Matrix.from2DArray(imArray);
-			//transpose back
+			//clear imArray
+			imArray=null;
+			//transpose for [rows][cols] convention
 			imMat=imMat.transpose();
-			
-			// dimensions: row of subregion, col of subregion
+			//Make array of matrices to hold each subregion
+			// dimensions: row of subregion tile, col of subregion tile
 			Matrix[][] regionArray = new Matrix[tileCountRow][tileCountCol]; //this is an array of matrices
-			
 			//initialize holders for indices
 			int r[]=new int[2];
 			int c[]=new int[2];
@@ -184,21 +185,24 @@ public class AxoNet implements Command {
 					Matrix thisIm = imMat.slice(r[0], c[0], r[1], c[1]);
 					
 					//normalize values by split intensities
-					//use sum of boolean matrix? divide by that number?
-					thisIm=thisIm.divide(thisIm.max());
-					
-					double tot=thisIm.sum();
-					if (tot>.90*tileWidth*tileHeight) {
-						//leave this tile alone					
+					//If tile is fully black (zeros), treat it the same as an all white tile (ones)
+					if (thisIm.max() != 0) {
+						//normalize by max to get [0,1] scale
+						thisIm=thisIm.divide(thisIm.max());
+						double tot=thisIm.sum();
+						if (tot>.90*tileWidth*tileHeight) {
+							//leave this tile alone if mostly white		
+						}
+						else {
+							//normalize image by subtracting mean pixel value and dividing by 2*SD of pixel value. This makes output about [-1,1]
+							double[] SumStd = modSumStd(thisIm);
+							thisIm=thisIm.subtract(SumStd[0]).divide(SumStd[1]*2);
+						}
 					}
 					else {
-						double[] SumStd = modSumStd(thisIm);
-						//System.out.println("tile intensity mean = " + Double.toString(SumStd[0]) + "tile intensity std = " + Double.toString(SumStd[1]));
-						
-						thisIm=thisIm.subtract(SumStd[0]).divide(SumStd[1]*2);//.multiply(-1); //normalize
+						//make all black matrix same as all white background matrix
+						thisIm=thisIm.add(1);
 					}
-					
-					
 					//add to array of matrices
 					thisIm=mirrorer(thisIm, mirrorNheight, mirrorNwidth);
 					regionArray[i][j]=thisIm;
@@ -214,11 +218,11 @@ public class AxoNet implements Command {
 				}			
 				
 			}
+			//free full image for memory
+			imMat=null;
 			long finish=System.nanoTime();
-			//System.out.println("100% finished with splitting full image. Time elapsed = " + Long.toString((finish-start)/1000000000) + " seconds.");
 			msg = ("100% finished with splitting full image. Time elapsed = " + Long.toString((finish-start)/1000000000) + " seconds.");
 			log.log(LogLevel.INFO, msg);
-			//log.info(msg);
 			/*
 			 * Iterates over all split regions, converts them to tensor inputs, and applies the model 
 			 * 
@@ -238,12 +242,12 @@ public class AxoNet implements Command {
 					//make input a tensor of undefined type and 4 dimensions
 					//makes Matrix-> DenseMatrix-> 2D float array -> 4D float array -> 4D tensor in one line
 					Tensor<?> input = Tensor.create(   addDims(toFloatArray(regionArray[i][j].toDenseMatrix().toArray()))    ); 
+					//free regionArray[i][j] to memory
+					regionArray[i][j]=null;
 					
-					//taken from microscopeImageFocusQualityClassifier
+					//this section taken from microscopeImageFocusQualityClassifier
 					SignatureDef sig = null;
 					try {
-						//System.out.print(model.toString());
-						//byte[] a=model.metaGraphDef();
 						sig = MetaGraphDef.parseFrom(model.metaGraphDef()) //define signature
 								.getSignatureDefOrThrow(DEFAULT_SERVING_SIGNATURE_DEF_KEY);
 						
@@ -252,7 +256,7 @@ public class AxoNet implements Command {
 						e.printStackTrace();
 					}
 					
-					final List<Tensor<?>> fetches = model.session().runner() // run model with specified inputs, outputs, and operation
+					final List<Tensor<?>> fetches = model.session().runner() // run model with specified inputs, outputs, and operation. input/output names defined in serving code, not in this package
 							.feed(opName(sig.getInputsOrThrow("input_image")), input) //
 							.fetch(opName(sig.getOutputsOrThrow("output_map"))) //
 							.run();
@@ -263,31 +267,19 @@ public class AxoNet implements Command {
 					output.copyTo(dst);  // copy from tensor to java float array
 					outputArray[i][j] = Matrix.from2DArray(toDoubleArray(removeDims(dst))); //make matrix from double array and write it to our output array
 					
-					/*
-					//show tile results- for debugging
-					FloatProcessor tileP = new FloatProcessor((removeDims(dst)));
-					ImagePlus tileIm = new ImagePlus("output region", tileP);
-					tileIm.show();
-					*/
-					
 					
 					if (j==0) {
-						//System.out.println(Double.toString(100*i/(tileCountRow)) + "% percent finished with applying model.");
 						msg = (Double.toString(100*i/(tileCountRow)) + "% percent finished with applying model.");
 						log.log(LogLevel.INFO, msg);
-						//log.info(msg);
 					}
 				}
 			}
 			finish=System.nanoTime();
 			
-			//System.out.println("100% finished with applying model. Time elapsed = " + Long.toString((finish-start)/1000000000) + " seconds.");
 			msg = ("100% finished with applying model. Time elapsed = " + Long.toString((finish-start)/1000000000) + " seconds.");
 			log.log(LogLevel.INFO, msg);
-			//log.info(msg);
 			
 			//reconstruct full image- create full size zero matrix and use Matrix.insert() to write values where they are supposed to be
-			//TODO make this faster
 			Matrix fullOutput= Matrix.zero(height, width);
 			float[][] floatOutput = new float[height][width]; 
 			
@@ -298,44 +290,40 @@ public class AxoNet implements Command {
 			 */
 			//TODO this is faster than it was but still needs work
 			System.out.println("\nRe-Unifying processed tiles...\n\n");
-			start=System.nanoTime();
 			for (int i=0; i< tileCountRow; i++) {
 				for (int j=0; j< tileCountCol; j++) {
-					//reverse mirroring. slice goes up to but does not include the last value, so param 3 and 4 should not be one less than they are
+					//reverse mirroring. slice goes up to but does not include the last value, so param 3 and 4 should be one more than where we want to stop the index
 					outputArray[i][j]=outputArray[i][j].slice(mirrorNheight, mirrorNwidth, tileHeight+mirrorNheight, tileWidth+mirrorNwidth);
 					float[][] slice = toFloatArray(outputArray[i][j].toDenseMatrix().toArray());
-					//fullOutput = fullOutput.insert(outputArray[i][j], i*tileHeight, j*tileWidth, tileHeight, tileWidth );
 					
+					//write this slice to appropriate place in float array output
 					for (int i1=0; i1< tileHeight; i1++) {
 						for (int j1=0; j1< tileWidth; j1++) {
 							floatOutput[i1+i*tileHeight][j1+j*tileWidth]=slice[i1][j1];
 						}
 					}
-					
-					if (j==0) {
-						//System.out.println(Double.toString(100*i/(tileCountRow)) + "% percent finished with re-unifying tiles");
-					}
 				}
 			}
-			finish=System.nanoTime();
-			//System.out.println("100% finished with re-unifying tiles. Time elapsed = " + Long.toString((finish-start)/1000000000) + " seconds.\n");
+			//convert from float array to matrix
 			fullOutput=Matrix.from2DArray(toDoubleArray(floatOutput));
-			fullOutput=fullOutput.divide(1000);
+			//free memory
+			floatOutput = null;
+			fullOutput=fullOutput.divide(1000); //divide by 1000 to undo output scaling used during model training
+			//calculate full image axon count
 			double sum = fullOutput.sum();
-			fullOutput=fullOutput.divide(fullOutput.max()*3/2 );
-			//convert this full matrix back to double array
+			//scale for eace of viewing and convert this full matrix back to double array
+			fullOutput=fullOutput.divide(fullOutput.max()*2/3 );
 			fullOutput.multiply(Math.pow(2, 32)); //normalize to 32bit for the FloatProcessor and display
+			//Transpose back because ImgagePlus uses [x][y] indexing and [cols][rows] scheme
 			double[][] densityMap = fullOutput.transpose().toDenseMatrix().toArray(); //transpose back and make double array
-			
+			//free memory
+			fullOutput=null;
 			//display heat map
 			FloatProcessor densityMapFlp = new FloatProcessor(toFloatArray(densityMap));
 			ImagePlus display = new ImagePlus("Count Density Map", densityMapFlp);
 			
-			//System.out.println ("Total count = " + Double.toString(sum));
 			msg = ("Total count = " + Double.toString(sum));
 			log.log(LogLevel.INFO, msg + "\n\n\n");
-			//log.info(msg);
-			
 			display.show();
 			
 			//Make results window
@@ -347,12 +335,6 @@ public class AxoNet implements Command {
 			//show.updateResults();
 			show.show("Axon Count Results");
 			
-			//TODO apply grid
-			/*
-			if (grid) {
-				
-			}
-			*/
 			
 		}
 			
