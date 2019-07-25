@@ -9,7 +9,8 @@ Installation Instructions:
 	-Scroll down and check **"TensorFlow"**   
 	-Click **"Add update site"**  
 		-Add **"http://sites.imagej.net/Mritch3/"** to the URL tab  
-		-Double click on the "Name" field and name the new site **"AxoNet"**, and add **"webdav:Mritch3"** to the Host tab    
+		-Double click on the **"Name"** field and name the new site **"AxoNet"**  
+		-Double click on the **"Host"** field and enter the host as **"webdav:Mritch3"**  
 	-Close the **"manage update sites"** window and click **"Apply changes"**    
 3. Restart Fiji  
 4. Load an image by dragging it to the Fiji window.  
@@ -20,4 +21,4 @@ Installation Instructions:
 
 
 
-Dependencies: Fiji/ImageJ, la4j, tensorflow java
+Dependencies: Fiji/ImageJ, la4j, tensorflow java  
