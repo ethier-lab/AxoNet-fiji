@@ -79,7 +79,8 @@ public class AxoNet implements Command {
 		@Override
 		public void run() {
 			
-			log.error("Opening log window..");
+			log.error("Opening log window...\n");
+			log.log(LogLevel.INFO, "AxoNet is running now!");
 			//load image
 			ImagePlus img = WindowManager.getCurrentImage(); 
 			
@@ -114,7 +115,7 @@ public class AxoNet implements Command {
 				grayscale.resize((int) compensate*width, (int) compensate*height);
 			}
 			catch (Exception e) {
-				String msg = ("make sure you set your image's scale properly.\nImage was not able to be resized.\n");
+				String msg = ("Make sure you set your image's scale properly.\nImage was not able to be resized. Defaulting to a scale of 15.7 pixels/micron.\n");
 				log.log(LogLevel.INFO, msg);
 				//log.info(msg);
 			}
@@ -332,7 +333,7 @@ public class AxoNet implements Command {
 			
 			//System.out.println ("Total count = " + Double.toString(sum));
 			msg = ("Total count = " + Double.toString(sum));
-			log.log(LogLevel.INFO, msg);
+			log.log(LogLevel.INFO, msg + "\n\n\n");
 			//log.info(msg);
 			
 			display.show();
