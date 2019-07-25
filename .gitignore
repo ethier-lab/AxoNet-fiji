@@ -1,7 +1,12 @@
+# data and model #
 *.mat
 *.npy
-models/
-target/
-.settings/
-.project
-.classpath
+/models
+
+# Maven #
+/target/
+
+# Eclipse #
+/.classpath
+/.project
+/.settings/
