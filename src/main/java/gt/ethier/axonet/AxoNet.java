@@ -3,6 +3,7 @@ package gt.ethier.axonet;
 
 import ij.ImagePlus;
 import ij.measure.Calibration;
+import ij.measure.ResultsTable;
 import ij.WindowManager;
 import ij.process.ImageProcessor;
 import ij.process.FloatProcessor;
@@ -18,6 +19,7 @@ import org.scijava.Priority;
 import org.scijava.command.Command;
 import org.scijava.io.http.HTTPLocation;
 import org.scijava.log.LogService;
+import org.scijava.log.StderrLogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.log.LogLevel;
@@ -77,10 +79,7 @@ public class AxoNet implements Command {
 		@Override
 		public void run() {
 			
-			
-			
-			
-			
+			log.error("Opening log window..");
 			//load image
 			ImagePlus img = WindowManager.getCurrentImage(); 
 			
@@ -89,7 +88,6 @@ public class AxoNet implements Command {
 			}
 			
 			ImageProcessor imp = img.getProcessor(); 
-			ImageConverter inc= new ImageConverter(img);
 			
 			ImagePlus progress = new ImagePlus("Running AxoNet", imp);
 			ImageProcessor grayscale = imp.convertToFloat();
@@ -145,9 +143,6 @@ public class AxoNet implements Command {
 			
 			//load model
 			SavedModelBundle model = getModel();
-			
-			//manipulate image
-			final int ndims = img.getNDimensions();
 						
 			
 			//make image matrix- this transposes the image because of the way imageJ works.
@@ -342,7 +337,13 @@ public class AxoNet implements Command {
 			
 			display.show();
 			
-			
+			//Make results window
+			ResultsTable show = new ResultsTable();
+			show.incrementCounter();
+			show.addValue(0, sum);
+			show.addLabel("Image Axon Count");
+			show.updateResults();
+			show.show("Axon Count Results");
 			
 			//TODO apply grid
 			/*
