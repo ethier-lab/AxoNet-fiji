@@ -40,14 +40,12 @@ import org.la4j.Vector;
 
 
 //@Plugin(type = Command.class, menuPath = "Plugins>AxoNet")
-@Plugin(type = Command.class, menuPath = "Plugins > AxoNet", selectable = true, priority = Priority.HIGH )
+@Plugin(type = Command.class, menuPath = "Plugins > AxoNet", selectable = true, priority = Priority.EXTREMELY_HIGH )
 public class AxoNet implements Command {
 		
 		//define model identifiers
 		//explained in https://www.tensorflow.org/api_docs/python/tf/saved_model/simple_save
-		//private static final String MODEL_URL = "https://drive.google.com/uc?export=download&id=1G20emdYbT2-VOpGjLsqaPqyFdXjTSs1W";
-		//private static final String MODEL_URL = "https://drive.google.com/uc?export=download&id=1rGN47Pgq-XPolb8CnOX8n3G3lg550xwF";
-		private static final String MODEL_URL = "https://github.com/matthew-ritch/AxoNet-fiji/raw/master/AxoNet-model.zip";
+		private static final String MODEL_URL = "https://github.com/matthew-ritch/AxoNet-fiji/raw/master/AxoNet-model.zip"; //downloads model from our github
 		private static final String MODEL_NAME = "model_3"; 
 		// Same as the tag used in export_saved_model in the Python code.
 		private static final String MODEL_TAG = "serve";  //check when saving model
@@ -154,9 +152,6 @@ public class AxoNet implements Command {
 			imArray=null;
 			//transpose for [rows][cols] convention
 			imMat=imMat.transpose();
-			//Make array of matrices to hold each subregion
-			// dimensions: row of subregion tile, col of subregion tile
-			Matrix[][] regionArray = new Matrix[tileCountRow][tileCountCol]; //this is an array of matrices
 			//initialize holders for indices
 			int r[]=new int[2];
 			int c[]=new int[2];
@@ -168,9 +163,13 @@ public class AxoNet implements Command {
 			 */
 			
 			//System.out.println("Splitting image into subregions...");
-			String msg = ("Splitting image into subregions...");
+			String msg = ("Splitting image into subregions and processing...");
 			log.log(LogLevel.INFO, msg);
 			//log.info(msg);
+			
+			Matrix fullOutput= Matrix.zero(height, width);
+			float[][] floatDensityOutput = new float[height][width];
+			
 			long start = System.nanoTime();
 			for (int i=0; i< tileCountRow; i++) {
 				for (int j=0; j< tileCountCol; j++) {
@@ -183,7 +182,7 @@ public class AxoNet implements Command {
 					//2D indexing, add to full array of regions
 					//fromrow, fromcol, torow, tocol. goes up to torow/tocol but does not include them, so second two indices should each be one more than where is wanted
 					Matrix thisIm = imMat.slice(r[0], c[0], r[1], c[1]);
-					
+					boolean skip=false;
 					//normalize values by split intensities
 					//If tile is fully black (zeros), treat it the same as an all white tile (ones)
 					if (thisIm.max() != 0) {
@@ -209,16 +208,64 @@ public class AxoNet implements Command {
 						}
 					}
 					else {
-						//keep all black matrix same as it was
-						//thisIm=thisIm.add(1);
+						//do not bother processing tile if background is all black
+						skip=true;
 					}
-					//add to array of matrices
+					//mirror edges
 					thisIm=mirrorer(thisIm, mirrorNheight, mirrorNwidth);
-					regionArray[i][j]=thisIm;
+					Matrix intermed = Matrix.zero(tileHeight, tileWidth);
+					if (!skip) {
+						//make input a tensor of undefined type and 4 dimensions
+						//makes Matrix-> DenseMatrix-> 2D float array -> 4D float array -> 4D tensor in one line
+						Tensor<?> input = Tensor.create(   addDims(toFloatArray(thisIm.toDenseMatrix().toArray()))    ); 
+						//free regionArray[i][j] to memory
+						
+						//this section taken from microscopeImageFocusQualityClassifier
+						SignatureDef sig = null;
+						try {
+							sig = MetaGraphDef.parseFrom(model.metaGraphDef()) //define signature
+									.getSignatureDefOrThrow(DEFAULT_SERVING_SIGNATURE_DEF_KEY);
+							
+						} catch (InvalidProtocolBufferException e) {
+							// Catch if model does not parse signature statement
+							e.printStackTrace();
+						}
+						
+						final List<Tensor<?>> fetches = model.session().runner() // run model with specified inputs, outputs, and operation. input/output names defined in serving code, not in this package
+								.feed(opName(sig.getInputsOrThrow("input_image")), input) //
+								.fetch(opName(sig.getOutputsOrThrow("output_map"))) //
+								.run();
+						
+						//get the results back from tensor format
+						float[][][][] dst = new float[1][tileHeight+2*mirrorNheight][tileWidth+2*mirrorNwidth][1]; // initialize intermediate variable
+						fetches.get(0).copyTo(dst);  //fetch output tensor, dimensions=4, then copy from tensor to java float array
+						//reverse mirroring. slice goes up to but does not include the last value, so param 3 and 4 should be one more than where we want to stop the index
+						//also make matrix from double array and write it to our output array
+						intermed = Matrix.from2DArray(toDoubleArray(removeDims(dst))).slice(mirrorNheight, mirrorNwidth, tileHeight+mirrorNheight, tileWidth+mirrorNwidth); 
+						
+					}
+					else {
+						//make zero matrix if is all black
+						intermed = Matrix.zero(tileHeight, tileWidth);	
+					}
+					
+					float[][] slice = toFloatArray(intermed.toDenseMatrix().toArray());
+					
+					//write this slice to appropriate place in float array output
+					for (int i1=0; i1< tileHeight; i1++) {
+						for (int j1=0; j1< tileWidth; j1++) {
+							floatDensityOutput[i1+i*tileHeight][j1+j*tileWidth]=slice[i1][j1];
+						}
+					}
+					
+					
+					
 					
 					
 					if (j==0) {
-						msg = (Double.toString(100*i/(tileCountRow)) + "% percent finished with splitting full image.");
+						msg = (Double.toString(100*i/(tileCountRow)) + "% percent finished with applying to full image.");
+						log.log(LogLevel.INFO, msg);
+						msg = (Long.toString((System.nanoTime()-start)/1000000000) + " seconds elapsed.");
 						log.log(LogLevel.INFO, msg);
 					}
 					
@@ -228,92 +275,13 @@ public class AxoNet implements Command {
 			//free full image for memory
 			imMat=null;
 			long finish=System.nanoTime();
-			msg = ("100% finished with splitting full image. Time elapsed = " + Long.toString((finish-start)/1000000000) + " seconds.");
-			log.log(LogLevel.INFO, msg);
-			/*
-			 * Iterates over all split regions, converts them to tensor inputs, and applies the model 
-			 * 
-			 */
-			
-			//System.out.println("\n\nApplying model...");
-			msg = ("\n\nApplying model...");
-			log.log(LogLevel.INFO, msg);
-			//log.info(msg);
-			
-			start = System.nanoTime();
-			Matrix[][] outputArray = new Matrix[tileCountRow][tileCountCol]; //this is an array of matrices
-			//input each part to model
-			for (int i=0; i< tileCountRow; i++) {
-				for (int j=0; j< tileCountCol; j++) {
-					
-					//make input a tensor of undefined type and 4 dimensions
-					//makes Matrix-> DenseMatrix-> 2D float array -> 4D float array -> 4D tensor in one line
-					Tensor<?> input = Tensor.create(   addDims(toFloatArray(regionArray[i][j].toDenseMatrix().toArray()))    ); 
-					//free regionArray[i][j] to memory
-					regionArray[i][j]=null;
-					
-					//this section taken from microscopeImageFocusQualityClassifier
-					SignatureDef sig = null;
-					try {
-						sig = MetaGraphDef.parseFrom(model.metaGraphDef()) //define signature
-								.getSignatureDefOrThrow(DEFAULT_SERVING_SIGNATURE_DEF_KEY);
-						
-					} catch (InvalidProtocolBufferException e) {
-						// Catch if model does not parse signature statement
-						e.printStackTrace();
-					}
-					
-					final List<Tensor<?>> fetches = model.session().runner() // run model with specified inputs, outputs, and operation. input/output names defined in serving code, not in this package
-							.feed(opName(sig.getInputsOrThrow("input_image")), input) //
-							.fetch(opName(sig.getOutputsOrThrow("output_map"))) //
-							.run();
-					
-					//get the results back from tensor format
-					Tensor<?> output = fetches.get(0); //fetch output tensor, dimensions=4
-					float[][][][] dst = new float[1][tileHeight+2*mirrorNheight][tileWidth+2*mirrorNwidth][1]; // initialize intermediate variable
-					output.copyTo(dst);  // copy from tensor to java float array
-					outputArray[i][j] = Matrix.from2DArray(toDoubleArray(removeDims(dst))); //make matrix from double array and write it to our output array
-					
-					if (j==0) {
-						msg = (Double.toString(100*i/(tileCountRow)) + "% percent finished with applying model.");
-						log.log(LogLevel.INFO, msg);
-					}
-				}
-			}
-			finish=System.nanoTime();
-			
-			msg = ("100% finished with applying model. Time elapsed = " + Long.toString((finish-start)/1000000000) + " seconds.");
+			msg = ("100% finished with applying model to the full image. Time elapsed = " + Long.toString(((finish-start)/1000000000)/60) + " minutes.");
 			log.log(LogLevel.INFO, msg);
 			
-			//reconstruct full image- create full size zero matrix and use Matrix.insert() to write values where they are supposed to be
-			Matrix fullOutput= Matrix.zero(height, width);
-			float[][] floatOutput = new float[height][width]; 
-			
-			
-			/*
-			 * Iterates over all outputs, indexes them to remove mirrored regions, and restores to full size image
-			 * 
-			 */
-			//TODO this is faster than it was but still needs work
-			System.out.println("\nRe-Unifying processed tiles...\n\n");
-			for (int i=0; i< tileCountRow; i++) {
-				for (int j=0; j< tileCountCol; j++) {
-					//reverse mirroring. slice goes up to but does not include the last value, so param 3 and 4 should be one more than where we want to stop the index
-					outputArray[i][j]=outputArray[i][j].slice(mirrorNheight, mirrorNwidth, tileHeight+mirrorNheight, tileWidth+mirrorNwidth);
-					float[][] slice = toFloatArray(outputArray[i][j].toDenseMatrix().toArray());
-					
-					//write this slice to appropriate place in float array output
-					for (int i1=0; i1< tileHeight; i1++) {
-						for (int j1=0; j1< tileWidth; j1++) {
-							floatOutput[i1+i*tileHeight][j1+j*tileWidth]=slice[i1][j1];
-						}
-					}
-				}
-			}
 			//convert from float array to matrix
-			fullOutput=Matrix.from2DArray(toDoubleArray(floatOutput));
+			fullOutput=Matrix.from2DArray(toDoubleArray(floatDensityOutput));
 			//free memory
-			floatOutput = null;
+			floatDensityOutput = null;
 			fullOutput=fullOutput.divide(1000); //divide by 1000 to undo output scaling used during model training
 			//calculate full image axon count
 			double sum = fullOutput.sum();
