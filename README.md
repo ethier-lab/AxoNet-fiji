@@ -1,8 +1,8 @@
 ## AxoNet-fiji Instructions
-This is an implementation of the AxoNet axon counting software for use in fiji/imageJ.
+This is an implementation of the AxoNet axon counting software for use in fiji/imageJ.  
 
 Installation Instructions:  
-1. Download, install, and run Fiji: https://fiji.sc/
+1. Download, install, and run Fiji: https://fiji.sc/  
 	-If you already have Fiji installed, update it to the most recent version  
 2. Navigate to **"Help > *Update...**" on the Fiji toolbar to add AxoNet and Tensorflow to your update sites   
 	-Click "Manage update sites"  
