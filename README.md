@@ -9,7 +9,7 @@ Installation Instructions:
 	-If you already have Fiji installed, update it to the most recent version  
 	
 2. Navigate to **"Help > "Update..."** on the Fiji toolbar to add AxoNet and Tensorflow to your update sites   
-	-If this triggers automatic updates, wait for them to load and restart Fiji when prompted before starting step 2 again
+	-If this triggers automatic updates, wait for them to load and restart Fiji when prompted before starting step 2 again  
 	-Click "Manage update sites"  
 	-Scroll down and click the check box next to **"TensorFlow"**   
 	-Click **"Add update site"**  
