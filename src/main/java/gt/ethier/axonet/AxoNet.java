@@ -190,18 +190,27 @@ public class AxoNet implements Command {
 						//normalize by max to get [0,1] scale
 						thisIm=thisIm.divide(thisIm.max());
 						double tot=thisIm.sum();
-						if (tot>.90*tileWidth*tileHeight) {
-							//leave this tile alone if mostly white		
+						//System.out.println(tot);
+						if ((tot>.90*tileWidth*tileHeight) | (tot<.10*tileWidth*tileHeight))  {
+							//leave this tile alone if mostly white or black, is likely background
 						}
 						else {
 							//normalize image by subtracting mean pixel value and dividing by 2*SD of pixel value. This makes output about [-1,1]
 							double[] SumStd = modSumStd(thisIm);
-							thisIm=thisIm.subtract(SumStd[0]).divide(SumStd[1]*2);
+							if (SumStd[1]!=0) {
+								thisIm=thisIm.subtract(SumStd[0]).divide(SumStd[1]*2);
+							}
+							//if stdev of image = 0, then something weird happened. use standard interior stdev as stand-in
+							//TODO figure this out. Somehow linked to cropping image to not have a background
+							else {
+								thisIm=thisIm.subtract(SumStd[0]).divide(.15);
+							}
+							
 						}
 					}
 					else {
-						//make all black matrix same as all white background matrix
-						thisIm=thisIm.add(1);
+						//keep all black matrix same as it was
+						//thisIm=thisIm.add(1);
 					}
 					//add to array of matrices
 					thisIm=mirrorer(thisIm, mirrorNheight, mirrorNwidth);
@@ -209,9 +218,7 @@ public class AxoNet implements Command {
 					
 					
 					if (j==0) {
-						//System.out.println(Double.toString(100*i/(tileCountRow)) + "% percent finished with splitting full image.");
 						msg = (Double.toString(100*i/(tileCountRow)) + "% percent finished with splitting full image.");
-						//log.info(msg);
 						log.log(LogLevel.INFO, msg);
 					}
 					
@@ -266,7 +273,6 @@ public class AxoNet implements Command {
 					float[][][][] dst = new float[1][tileHeight+2*mirrorNheight][tileWidth+2*mirrorNwidth][1]; // initialize intermediate variable
 					output.copyTo(dst);  // copy from tensor to java float array
 					outputArray[i][j] = Matrix.from2DArray(toDoubleArray(removeDims(dst))); //make matrix from double array and write it to our output array
-					
 					
 					if (j==0) {
 						msg = (Double.toString(100*i/(tileCountRow)) + "% percent finished with applying model.");
