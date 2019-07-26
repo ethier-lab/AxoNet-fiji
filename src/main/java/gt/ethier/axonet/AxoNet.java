@@ -2,8 +2,10 @@ package gt.ethier.axonet;
 
 
 import ij.ImagePlus;
+import ij.ImageStack;
 import ij.measure.Calibration;
 import ij.measure.ResultsTable;
+import ij.plugin.RGBStackMerge;
 import ij.WindowManager;
 import ij.process.ImageProcessor;
 import ij.process.FloatProcessor;
@@ -11,6 +13,8 @@ import ij.process.FloatProcessor;
 import java.util.List;
 
 import net.imagej.DatasetService;
+import ij.CompositeImage;
+import ij.IJ;
 import net.imagej.tensorflow.TensorFlowService;
 //import net.imglib2.type.numeric.RealType;
 
@@ -40,7 +44,7 @@ import org.la4j.Vector;
 
 
 //@Plugin(type = Command.class, menuPath = "Plugins>AxoNet")
-@Plugin(type = Command.class, menuPath = "Plugins>AxoNet", priority = Priority.EXTREMELY_HIGH )
+@Plugin(type = Command.class, menuPath = "Analyze>AxoNet", priority = Priority.EXTREMELY_HIGH )
 public class AxoNet implements Command {
 		
 		//define model identifiers
@@ -50,7 +54,7 @@ public class AxoNet implements Command {
 		// Same as the tag used in export_saved_model in the Python code.
 		private static final String MODEL_TAG = "serve";  //check when saving model
 		private static final String DEFAULT_SERVING_SIGNATURE_DEF_KEY ="serving_default"; //leave unchanged
-		private static final int TILE_SIZE =256; //mess with this to optimize performance. Should keep around this size, must be multiple of 32.
+		private static final int TILE_SIZE =256; //mess with this to optimize performance. Should keep around 256, must be multiple of 32.
 		//define services for our plugin
 		@Parameter
 		private static TensorFlowService tensorFlowService; //service for working with tensorflow    https://javadoc.scijava.org/ImageJ/net/imagej/tensorflow/TensorFlowService.html
@@ -86,7 +90,7 @@ public class AxoNet implements Command {
 			}
 			ImageProcessor imp = img.getProcessor(); 
 			//open greyscale version, close original version
-			ImagePlus progress = new ImagePlus("Running AxoNet", imp);
+			ImagePlus progress = new ImagePlus("Nerve Image", imp);
 			ImageProcessor grayscale = imp.convertToFloat();
 			progress.setProcessor(grayscale);
 			img.close();
@@ -265,7 +269,7 @@ public class AxoNet implements Command {
 					if (j==0) {
 						msg = (Double.toString(100*i/(tileCountRow)) + "% percent finished with applying to full image.");
 						log.log(LogLevel.INFO, msg);
-						msg = (Long.toString((System.nanoTime()-start)/1000000000) + " seconds elapsed.");
+						msg = (Long.toString((System.nanoTime()-start)/1000000000) + " sec elapsed.");
 						log.log(LogLevel.INFO, msg);
 					}
 					
@@ -273,9 +277,9 @@ public class AxoNet implements Command {
 				
 			}
 			//free full image for memory
-			imMat=null;
+			//imMat=null;
 			long finish=System.nanoTime();
-			msg = ("100% finished with applying model to the full image. Time elapsed = " + Long.toString(((finish-start)/1000000000)/60) + " minutes.");
+			msg = ("100% finished with applying model to the full image. Time elapsed = " + Long.toString(((finish-start)/1000000000)/60) + " min.");
 			log.log(LogLevel.INFO, msg);
 			
 			//convert from float array to matrix
@@ -286,9 +290,9 @@ public class AxoNet implements Command {
 			//calculate full image axon count
 			double sum = fullOutput.sum();
 			//scale for eace of viewing and convert this full matrix back to double array
-			fullOutput=fullOutput.divide(fullOutput.max()*2/3 );
+			fullOutput=fullOutput.divide(fullOutput.max()*1/4 );
 			fullOutput.multiply(Math.pow(2, 32)); //normalize to 32bit for the FloatProcessor and display
-			//Transpose back because ImgagePlus uses [x][y] indexing and [cols][rows] scheme
+			//Transpose back because ImagePlus uses [x][y] indexing and [cols][rows] scheme
 			double[][] densityMap = fullOutput.transpose().toDenseMatrix().toArray(); //transpose back and make double array
 			//free memory
 			fullOutput=null;
@@ -308,6 +312,14 @@ public class AxoNet implements Command {
 			show.addLabel("Image Axon Count");
 			//show.updateResults();
 			show.show("Axon Count Results");
+			
+			//make overaly image output
+			ImagePlus[] stack = new ImagePlus[7];
+			stack[3]=progress;
+			stack[5]=display;
+			RGBStackMerge merger= new RGBStackMerge();
+			ImagePlus merge = merger.mergeHyperstacks(stack, true);
+			merge.show();
 			
 			
 		}
