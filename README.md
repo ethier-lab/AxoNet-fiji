@@ -28,7 +28,8 @@ This method is intended for use in optic nerve images obtained by light microsco
  	-Click **AxoNet** to run!  
 	
 6. Monitor the **Console** window for the program's message log  
-
+  
+7. Read **"AxoNet Output Explanation.pdf"** above to interpret your results
 
 
 ### Dependencies:  
