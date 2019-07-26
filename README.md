@@ -1,9 +1,9 @@
-## AxoNet-fiji Instructions
+# AxoNet-fiji Instructions
 This is an implementation of the AxoNet axon counting software for use in fiji/imageJ.  
 This method is intended for use in optic nerve images obtained by light microscope at 100x mag.
 
 
-Installation Instructions:  
+## Installation and Use Instructions:  
 
 1. Download, install, and run Fiji: https://fiji.sc/  
 	-If you already have Fiji installed, update it to the most recent version  
@@ -26,6 +26,8 @@ Installation Instructions:
 5. Find AxoNet in the bottom of the **"Analyze"** menu on the Fiji toolbar  
 	-This is towards the bottom of the drop-down menu.    
  	-Click **AxoNet** to run!  
+	
+6. Monitor the **Console** window for the program's message log  
 
 
 
