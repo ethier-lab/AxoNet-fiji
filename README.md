@@ -31,7 +31,9 @@ AxoNet produces axon count estimates with high accuracy and is robust to image q
 	
 6. Monitor the **Console** window for the program's message log  
   
-7. Read **"AxoNet Output Explanation.pdf"** in the repository to interpret your results
+7. Read **"AxoNet Output Explanation.pdf"** in the repository to interpret your results  
+  
+Note: You may also install AxoNet by manually adding the contents of the "jar files" folder of this repository to the plugins folder inside your Fiji/ImageJ folder
 
 
 ### Dependencies:  
