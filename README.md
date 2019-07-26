@@ -31,7 +31,7 @@ AxoNet produces axon count estimates with high accuracy and is robust to image q
 	
 6. Monitor the **Console** window for the program's message log  
   
-7. Read **"AxoNet Output Explanation.pdf"** above to interpret your results
+7. Read **"AxoNet Output Explanation.pdf"** in the repository to interpret your results
 
 
 ### Dependencies:  
