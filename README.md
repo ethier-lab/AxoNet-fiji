@@ -3,7 +3,7 @@ This is an implementation of the AxoNet axon counting software for use in fiji/i
 This method is intended for use in optic nerve images obtained by light microscope at 100x mag.
 
 
-## Installation and Use Instructions:  
+## Installation and Use:  
 
 1. Download, install, and run Fiji: https://fiji.sc/  
 	-If you already have Fiji installed, update it to the most recent version  
