@@ -1,6 +1,8 @@
 # AxoNet-fiji Instructions
 This is an implementation of the AxoNet axon counting software for use in fiji/imageJ.  
-This method is intended for use in optic nerve images obtained by light microscope at 100x mag.
+AxoNet is intended for use in optic nerve images obtained by light microscope at 100x mag. AxoNet has been validated for use in NHP and rat optic nerves.
+
+AxoNet produces axon count estimates with high accuracy and is robust to image quality and nerve damage in models of glaucoma. We used deep learning to train our tool to estimate a pixelwise axon count density, which we integrate across the full image to calculate an axon count.
 
 
 ## Installation and Use:  
