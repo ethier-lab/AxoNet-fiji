@@ -31,6 +31,6 @@ This method is intended for use in optic nerve images obtained by light microsco
 
 
 
-#Dependencies:  
+# Dependencies:  
 Fiji/ImageJ, la4j, tensorflow java   
 These should be handled if you follow the above installation.
