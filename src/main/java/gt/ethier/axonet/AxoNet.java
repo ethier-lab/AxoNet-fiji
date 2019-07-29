@@ -64,7 +64,9 @@ public class AxoNet implements Command {
 		private static LogService log; //sets up log service	
 		//@Parameter(label = "Optic Nerve Cross Section")
 		//private Img<T> originalImage;
-		
+		@Parameter(label = "<html>What scale is your image, in pixels per micron? " + "\nIf you don't know just hit OK.", persist = false,                          
+				description = "<html>What scale is your image, in pixels per micron?", min = "10", max = "20")
+			private double Scale = 15.7;
 		//TODO add these
 		/*
 		@Parameter(label = "<html>Do you want a grid overlay on the final full count display? " + "This may help with viewing a large image's results.", persist = false,                          
@@ -78,7 +80,6 @@ public class AxoNet implements Command {
 		
 		@Override
 		public void run() {
-			
 			//display error level to get the log to open
 			log.error("Opening log window...\n");
 			log.log(LogLevel.INFO, "AxoNet is running now!");
@@ -96,37 +97,37 @@ public class AxoNet implements Command {
 			img.close();
 			progress.show();
 			
-			//check scale from input
-			//set to default = 15.7 if scale is 0.
-			Calibration cal = img.getCalibration(); 
-			double scale = 15.7;
-			if (cal.pixelWidth != 0) {
-				scale = 1.0 / cal.pixelWidth;
-			}
-			else {
-				String msg = ("Make sure you set your image's scale properly.\nDefaulting to a scale of 15.7 pixels/micron.\n");
-				log.log(LogLevel.INFO, msg);
-			}
+			
 			
 			//define full image sizing 
 			int height = grayscale.getHeight();
 			int width = grayscale.getWidth();
-			//amout to scale by to return to 15.7 pixels/micron, as needed by the model
-			double compensate = 15.7/scale;
+			System.out.println(height);
+			System.out.println(width);
 			
+			//amout to scale by to return to 15.7 pixels/micron, as needed by the model
+			double compensate = 15.7/Scale;
+			System.out.println(compensate);
+			System.out.println(compensate*height);
+			System.out.println(compensate*width);
 			//rescale, redefine total height and width, and set tile sizes
-			//TODO add input here from user to correct scale
 			try {
-				grayscale.resize((int) compensate*width, (int) compensate*height);
+				grayscale=grayscale.resize((int) Math.round(compensate*width), (int) Math.round(compensate*height));
 			}
 			catch (Exception e) {
-				String msg = ("Image was not resized.\n");
+				String msg = ("Error- Image was not resized. Contining with original image.\n");
 				log.log(LogLevel.INFO, msg);
 			}
+			
+			//check scale from input
+			IJ.run("Set Scale...", "distance=" + Double.toString(15.7) + " known=1 unit=micron");
 			
 			//redefine full iamge sizing after scaling
 			height = grayscale.getHeight();
 			width = grayscale.getWidth();
+			System.out.println(height);
+			System.out.println(width);
+			progress.setProcessor(grayscale);
 			//define tile sizes
 			int tileCountRow = Math.round(height/TILE_SIZE);
 			int tileCountCol = Math.round(width/TILE_SIZE);
@@ -165,8 +166,7 @@ public class AxoNet implements Command {
 			 * Iterates over full image, splits into subregions, and normalizes along the standard scheme 
 			 * 
 			 */
-			
-			//System.out.println("Splitting image into subregions...");
+			//TODO make patchwise
 			String msg = ("Splitting image into subregions and processing...");
 			log.log(LogLevel.INFO, msg);
 			//log.info(msg);
@@ -204,7 +204,6 @@ public class AxoNet implements Command {
 								thisIm=thisIm.subtract(SumStd[0]).divide(SumStd[1]*2);
 							}
 							//if stdev of image = 0, then something weird happened. use standard interior stdev as stand-in
-							//TODO figure this out. Somehow linked to cropping image to not have a background
 							else {
 								thisIm=thisIm.subtract(SumStd[0]).divide(.15);
 							}
@@ -396,7 +395,6 @@ public class AxoNet implements Command {
 		
 		 private static SavedModelBundle getModel() {
 				//load model
-			 	//TODO fix
 				HTTPLocation source = null;
 				SavedModelBundle model = null;
 				try {source = new HTTPLocation(MODEL_URL);} catch (final Exception e) {log.error(e);}
