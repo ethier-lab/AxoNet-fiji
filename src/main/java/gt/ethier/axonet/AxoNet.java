@@ -49,7 +49,7 @@ public class AxoNet implements Command {
 		
 		//define model identifiers
 		//explained in https://www.tensorflow.org/api_docs/python/tf/saved_model/simple_save
-		private static final String MODEL_URL = "https://github.com/matthew-ritch/AxoNet-fiji/raw/master/AxoNet-model.zip"; //downloads model from our github
+		private static final String MODEL_URL = "https://github.com/ethier-lab/AxoNet-fiji/raw/master/AxoNet-model.zip"; //downloads model from our github
 		private static final String MODEL_NAME = "model_3"; 
 		// Same as the tag used in export_saved_model in the Python code.
 		private static final String MODEL_TAG = "serve";  //check when saving model
@@ -102,14 +102,9 @@ public class AxoNet implements Command {
 			//define full image sizing 
 			int height = grayscale.getHeight();
 			int width = grayscale.getWidth();
-			System.out.println(height);
-			System.out.println(width);
 			
 			//amout to scale by to return to 15.7 pixels/micron, as needed by the model
 			double compensate = 15.7/Scale;
-			System.out.println(compensate);
-			System.out.println(compensate*height);
-			System.out.println(compensate*width);
 			//rescale, redefine total height and width, and set tile sizes
 			try {
 				grayscale=grayscale.resize((int) Math.round(compensate*width), (int) Math.round(compensate*height));
@@ -289,7 +284,7 @@ public class AxoNet implements Command {
 			//calculate full image axon count
 			double sum = fullOutput.sum();
 			//scale for eace of viewing and convert this full matrix back to double array
-			fullOutput=fullOutput.divide(fullOutput.max()*1/4 );
+			fullOutput=fullOutput.divide(fullOutput.max()*3/4 );
 			fullOutput.multiply(Math.pow(2, 32)); //normalize to 32bit for the FloatProcessor and display
 			//Transpose back because ImagePlus uses [x][y] indexing and [cols][rows] scheme
 			double[][] densityMap = fullOutput.transpose().toDenseMatrix().toArray(); //transpose back and make double array
