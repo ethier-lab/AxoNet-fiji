@@ -1,8 +1,10 @@
 # AxoNet-fiji Instructions
 This is an implementation of the AxoNet axon counting software for use in fiji/imageJ.  
-AxoNet is intended for use in optic nerve images obtained by light microscope at 100x mag. AxoNet has been validated for use in NHP and rat optic nerves.
+AxoNet is intended for use in optic nerve images obtained by light microscope at 100x mag.  
+AxoNet has been validated for use in NHP and rat optic nerves.  
 
-AxoNet produces axon count estimates with high accuracy and is robust to image quality and nerve damage in models of glaucoma. We used deep learning to train our tool to estimate a pixelwise axon count density, which we integrate across the full image to calculate an axon count.
+AxoNet produces axon count estimates with high accuracy and is robust to image quality and nerve damage in models of glaucoma.  
+We used deep learning to train our tool to estimate a pixelwise axon count density, which we integrate across the full image to calculate an axon count.  
 
 
 ## Installation and Use:  
@@ -18,6 +20,7 @@ AxoNet produces axon count estimates with high accuracy and is robust to image q
 	    - Add **"http://sites.imagej.net/Mritch3/"** to the URL tab  
 		- Double click on the **"Name"** field and name the new site **"AxoNet"**  
 		- Double click on the **"Host"** field and enter the host as **"webdav:Mritch3"**  
+		- Make sure the check box next to this new update site is clicked
 	- Close the **"manage update sites"** window and click **"Apply changes"**    
 	
 3. Restart Fiji  
@@ -37,5 +40,5 @@ Note: You may also install AxoNet by manually adding the contents of the "jar fi
 
 
 ### Dependencies:  
-Fiji/ImageJ, la4j, tensorflow java  
+[Fiji/ImageJ](https://fiji.sc/), [la4j](http://la4j.org/), [Tensorflow for Java](https://www.tensorflow.org/install/lang_java)  
 (These should be handled if you follow the above installation)
