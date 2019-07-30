@@ -26,7 +26,7 @@ AxoNet produces axon count estimates with high accuracy and is robust to image q
 
 4. Load an image by dragging its file to the Fiji window.  
 	- Your image may be any size or shape!  
-	- If you have a large nerve image to process, do the following for speed:
+	- If you have a large nerve image to process, **do the following for speed**:
 		- Use **Polygon selections** or **Freehand selections** to select your entire nerve
 		- Click **"Image" > "Crop"** on the Fiji toolbar to crop the image to your selection
 		- Click **"Edit" > "Clear Outside"** on the Fiji toolbar to make all non-nerve image regions black
