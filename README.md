@@ -7,12 +7,12 @@ AxoNet produces axon count estimates with high accuracy and is robust to image q
 
 ## Installation and Use:  
 
-1. Download, install, and run Fiji [here](https://fiji.sc/).  
+1. Download, install, and run Fiji [here](https://fiji.sc/).    
 	-If you already have Fiji installed, update it to the most recent version  
-	
+	  
 2. Navigate to **"Help > "Update..."** on the Fiji toolbar to add AxoNet and Tensorflow to your update sites   
-	-If this triggers automatic updates, wait for them to load and restart Fiji when prompted before starting step 2 again  
-	-Click "Manage update sites"  
+	-*If this triggers automatic updates, wait for them to load and restart Fiji when prompted _before starting step 2 again_*  
+	-Click **"Manage update sites"**  
 	-Scroll down and click the check box next to **"TensorFlow"**   
 	-Click **"Add update site"**  
 		-Add **"http://sites.imagej.net/Mritch3/"** to the URL tab  
