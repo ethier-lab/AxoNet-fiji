@@ -23,11 +23,11 @@ AxoNet produces axon count estimates with high accuracy and is robust to image q
 3. Restart Fiji  
 
 4. Load an image by dragging its file to the Fiji window.  
-	-Your image may be any size!  
+	- Your image may be any size or shape!  
 	
 5. Find AxoNet in the bottom of the **"Analyze"** menu on the Fiji toolbar  
-	-This is towards the bottom of the drop-down menu.    
- 	-Click **AxoNet** to run!  
+	- This is towards the bottom of the drop-down menu.    
+ 	- Click **AxoNet** to run!  
 	
 6. Monitor the **Console** window for the program's message log  
   
