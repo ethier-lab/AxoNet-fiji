@@ -46,3 +46,6 @@ Note: You may also install AxoNet by manually adding the contents of the "jar fi
 ### Dependencies:  
 [Fiji/ImageJ](https://fiji.sc/), [la4j](http://la4j.org/), [Tensorflow for Java](https://www.tensorflow.org/install/lang_java)  
 (These should be handled if you follow the above installation)
+
+## Notice
+This work is licensed under a Apache 2.0 license. Users at for-profit commercial organizations are requested to provide a donation, in an amount of their choice, to  support the wonderful work of the [National Glaucoma Research Program of the BrightFocus Foundation](www.brightfocus.org). Users in the non-profit sector, i.e. at academic, foundation and governmental organizations, are requested to consider a similar donation. If you publish papers using this software, please cite the following article: (coming soon)
