@@ -5,4 +5,4 @@ Users at for-profit commercial organizations are requested to provide a donation
 Users in the non-profit sector, i.e. at academic, foundation and governmental organizations, are requested to consider a similar donation. 
 
 If you publish papers using this software, please cite the following article: (coming soon).
-This tool was developed by the Ethier Lab of the Georgia Institute of Technology.
+This tool was developed by the Ethier Lab at the Georgia Institute of Technology.
