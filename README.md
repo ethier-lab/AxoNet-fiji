@@ -6,7 +6,7 @@ AxoNet has been validated for use in NHP and rat optic nerves.
 AxoNet produces axon count estimates with high accuracy and is robust to image quality and nerve damage in models of glaucoma. We used deep learning to train our tool to estimate a pixelwise axon count density, which we integrate across the full image to calculate an axon count.  
 
 
-## Installation and Use:  
+## Installation:  
 
 1. Download, install, and run Fiji [here](https://fiji.sc/).    
 	- If you already have Fiji installed, update it to the most recent version  
@@ -23,22 +23,25 @@ AxoNet produces axon count estimates with high accuracy and is robust to image q
 	- Close the **"manage update sites"** window and click **"Apply changes"**    
 	
 3. Restart Fiji  
+  
 
-4. Load an image by dragging its file to the Fiji window.  
+## Use:  
+
+1. Load an image by dragging its file to the Fiji window.  
 	- Your image may be any size or shape!  
 	- If you are processing a full nerve or an image with background, **do the following**:
 		- Use **Polygon selections** or **Freehand selections** to select your entire nerve
 		- Click **"Image" > "Crop"** on the Fiji toolbar to crop the image to your selection
 		- Click **"Edit" > "Clear Outside"** on the Fiji toolbar to make all non-nerve image regions black
-		- Close other programs you have open and are not using
-	
-5. Find AxoNet in the bottom of the **"Analyze"** menu on the Fiji toolbar  
+		- Close other programs you have open and are not using  
+			
+2. Find AxoNet in the bottom of the **"Analyze"** menu on the Fiji toolbar  
 	- This is towards the bottom of the drop-down menu.    
  	- Click **AxoNet** to run!  
 	
-6. Monitor the **Console** window for the program's message log  
+3. Monitor the **Console** window for the program's message log  
   
-7. Read **"AxoNet Output Explanation.pdf"** in the repository to interpret your results  
+4. Read **"AxoNet Output Explanation.pdf"** in the repository to interpret your results  
   
 Note: You may also install AxoNet by manually adding the contents of the "jar files" folder of this repository to the plugins folder inside your Fiji/ImageJ folder
 
