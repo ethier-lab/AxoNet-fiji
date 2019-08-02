@@ -55,8 +55,8 @@ public class AxoNet implements Command {
 		private static final String MODEL_TAG = "serve";  //check when saving model
 		private static final String DEFAULT_SERVING_SIGNATURE_DEF_KEY ="serving_default"; //leave unchanged
 		//decide me. must be multiple of 16
-		private static final int patchBuffer = 64;
-		private static final int TILE_SIZE =2*192;//-patchBuffer*2; //mess with this to optimize performance. Should keep around 256, must be multiple of 32.
+		private static final int patchBuffer = 48;
+		private static final int TILE_SIZE =256+128;//-patchBuffer*2; //mess with this to optimize performance. Should keep around 256, must be multiple of 32.
 		//define services for our plugin
 		@Parameter
 		private static TensorFlowService tensorFlowService; //service for working with tensorflow    https://javadoc.scijava.org/ImageJ/net/imagej/tensorflow/TensorFlowService.html
@@ -210,7 +210,7 @@ public class AxoNet implements Command {
 					int rowsAdded = 0;
 					int colsAdded = 0;
 					
-					//define bounds of the original image to get a resulting density map process
+					//define bounds of the original image to convert to a density map
 					r1[0]=i*tileHeight;
 					r1[1]=(i+1)*tileHeight;
 					c1[0]=j*tileWidth;
@@ -220,7 +220,7 @@ public class AxoNet implements Command {
 					System.out.println(r1[1]-r1[0]);
 					System.out.println(c1[1]-c1[0]);
 					*/
-					//Define bounds to process in order to result in the bounds above. These are the originals with the added patchbuffer width
+					//Define bounds to process in order to result in the bounds above. These are the originals with the added patchbuffer width where available.
 					r[0]=r1[0]-patchBuffer; //start earlier
 					r[1]=r1[1]+patchBuffer; //end later
 					c[0]=c1[0]-patchBuffer;
@@ -285,7 +285,21 @@ public class AxoNet implements Command {
 							else {
 								thisIm=thisIm.subtract(SumStd[0]).divide(.15);
 							}
+							
 						}
+						//TODO: vectorize this?
+						//makes bounded by [-1,1]
+						for (int i1=0; i1 < thisIm.rows(); i1++) {
+							for (int j1=0; j1 < thisIm.columns(); j1++) {
+								if (thisIm.get(i1,j1)<-1) {
+									thisIm.set(i1, j1, -1);
+								}
+								if (thisIm.get(i1,j1)>1) {
+									thisIm.set(i1, j1, 1);
+								}
+							}
+						}
+						
 					}
 					else {
 						//do not bother processing tile if background is all black
