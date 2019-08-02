@@ -55,8 +55,8 @@ public class AxoNet implements Command {
 		private static final String MODEL_TAG = "serve";  //check when saving model
 		private static final String DEFAULT_SERVING_SIGNATURE_DEF_KEY ="serving_default"; //leave unchanged
 		//decide me. must be multiple of 16
-		private static final int patchBuffer = 48;
-		private static final int TILE_SIZE =256+128;//-patchBuffer*2; //mess with this to optimize performance. Should keep around 256, must be multiple of 32.
+		private static final int patchBuffer = 64;
+		private static final int TILE_SIZE =224;//-patchBuffer*2; //mess with this to optimize performance. Should keep around 256, must be multiple of 32.
 		//define services for our plugin
 		@Parameter
 		private static TensorFlowService tensorFlowService; //service for working with tensorflow    https://javadoc.scijava.org/ImageJ/net/imagej/tensorflow/TensorFlowService.html
@@ -69,18 +69,10 @@ public class AxoNet implements Command {
 		@Parameter(label = "<html>What scale is your image, in pixels per micron? " + "\nIf you don't know just hit OK.", persist = false,                          
 				description = "<html>What scale is your image, in pixels per micron?", min = "10", max = "20")
 			private double Scale = 15.7;
+		@Parameter(label = "<html>Do you want the pixelwise density map output to a results table? This can be exported as .csv.", persist = false,                          
+				description = "<html> prints result count density to a results table")
+			private boolean csvOut = false;
 		
-		//TODO add these
-		
-		/*
-		@Parameter(label = "<html>Do you want a grid overlay on the final full count display? " + "This may help with viewing a large image's results.", persist = false,                          
-				description = "<html>Do you want a grid overlay on the final full count display? " +
-					"This may help with viewing a large image's results.")
-			private boolean grid = true;
-		@Parameter(label = "<html>Do you want a .csv output file of the pixelwise count densities used to calculate the full count?", persist = false,                          
-				description = "<html> prints result count density to .csv in home folder")
-			private boolean csvOut = true;
-		*/
 		
 		@Override
 		public void run() {
@@ -141,23 +133,7 @@ public class AxoNet implements Command {
 			int tileHeight = (int) Math.floor(height/tileCountRow);
 			if (tileWidth%2!=0) { tileWidth=tileWidth-1;}
 			if (tileHeight%2!=0) { tileHeight=tileHeight-1;}
-			/*
-			System.out.println("full height");
-			System.out.println(height);
-			System.out.println("full width");
-			System.out.println(width);
-			
-			System.out.println("tile height");
-			System.out.println(tileHeight);
-			System.out.println("tile width");
-			System.out.println(tileWidth);
-			
-			System.out.println("tiled actual height");
-			System.out.println(tileHeight*tileCountRow);
-			System.out.println("tiled actual width");
-			System.out.println(tileWidth*tileCountCol);
-			*/
-			
+			//calculate how much is left off on last tile
 			int diff_endCol = width-tileWidth*tileCountCol;
 			int diff_endRow = height-tileHeight*tileCountRow;
 			
@@ -171,7 +147,6 @@ public class AxoNet implements Command {
 			//load model from github download link
 			log.log(LogLevel.INFO, "Getting the AxoNet model ready...");
 			SavedModelBundle model = getModel();
-						
 			
 			//make image matrix- casting an imagePlus to a float array. ImageJ indexes images as [x][y], so the output array is float[width][height]. We transpose this for [rows][cols] convention.
 			double[][] imArray = toDoubleArray(grayscale.getFloatArray());
@@ -193,7 +168,6 @@ public class AxoNet implements Command {
 			//
 			String msg = ("Splitting image into subregions and processing...");
 			log.log(LogLevel.INFO, msg);
-			//log.info(msg);
 			
 			Matrix fullOutput= Matrix.zero(height, width);
 			float[][] floatDensityOutput = new float[height][width];
@@ -215,11 +189,6 @@ public class AxoNet implements Command {
 					r1[1]=(i+1)*tileHeight;
 					c1[0]=j*tileWidth;
 					c1[1]=(j+1)*tileWidth;
-					/*
-					System.out.println("\n\noriginal");
-					System.out.println(r1[1]-r1[0]);
-					System.out.println(c1[1]-c1[0]);
-					*/
 					//Define bounds to process in order to result in the bounds above. These are the originals with the added patchbuffer width where available.
 					r[0]=r1[0]-patchBuffer; //start earlier
 					r[1]=r1[1]+patchBuffer; //end later
@@ -245,19 +214,7 @@ public class AxoNet implements Command {
 					if (c[0]<0) {c[0] = 0;}
 					if (r[1]>(height)) {r[1] = height;} //if trying to buffer to after image ends, correct to the true end. This if statement should not ever execute. We are using floor and not round for tile size 
 					if (c[1]>(width)) {c[1] = width;}
-					/*
-					System.out.println("buffered size");
-					System.out.println(r[1]-r[0]);
-					System.out.println(c[1]-c[0]);
-					*/
 					int[] effectiveBuffer = new int[] {  r1[0]-r[0],   r1[1]-r[1],  c1[0]-c[0],  c1[1]-c[1]  };//[0]s should be positve to zero to index less on start of slice, [1]s should be negative to zero to index less on end of slice,
-					/*
-					System.out.println("Buffer Size (start row, end row, start col, end col)");
-					System.out.println(effectiveBuffer[0]);
-					System.out.println(effectiveBuffer[1]);
-					System.out.println(effectiveBuffer[2]);
-					System.out.println(effectiveBuffer[3]);
-					 */
 					//create new tile size adjusting for mirror and buffer sizes
 					int[] newTileSize = new int[] {tileHeight+2*mirrorNheight+effectiveBuffer[0]-effectiveBuffer[1], tileWidth+2*mirrorNwidth+effectiveBuffer[2]-effectiveBuffer[3]};
 					
@@ -272,7 +229,7 @@ public class AxoNet implements Command {
 						thisIm=thisIm.divide(thisIm.max());
 						double tot=thisIm.sum();
 						//see if total is greater than the total if full buffered tile is above .9 of maximum intensity
-						if ((tot>.84*(c[1]-c[0])*(r[1]-r[0])) | (tot<.10*(c[1]-c[0])*(r[1]-r[0])))  {
+						if ((tot>.94*(c[1]-c[0])*(r[1]-r[0])) | (tot<.04*(c[1]-c[0])*(r[1]-r[0])))  {
 							//leave this tile alone if mostly white or black, is likely background
 						}
 						else {
@@ -332,35 +289,13 @@ public class AxoNet implements Command {
 						
 						//get the results back from tensor format
 						float[][][][] dst = new float[1][newTileSize[0]][newTileSize[1]][1]; // initialize intermediate variable
-						/*
-						System.out.println("output tensor");
-						System.out.println(newTileSize[0]);
-						System.out.println(newTileSize[1]);
-						*/
 						fetches.get(0).copyTo(dst);  //fetch output tensor, dimensions=4, then copy from tensor to java float array
 						//reverse mirroring. slice goes up to but does not include the last value, so param 3 and 4 should be one more than where we want to stop the index
 						//also make matrix from double array and write it to our output array
 						//start at mirrorNheight/width to remove left/top mirror. Stop at tileheight/width +mirrorNheight/width to stop one mirror size short of the full mirrored size, tilewidth/height + 2*mirrorNwidth/height  
 						intermed = Matrix.from2DArray(toDoubleArray(removeDims(dst))).slice(mirrorNheight, mirrorNwidth, tileHeight + mirrorNheight - effectiveBuffer[1] + effectiveBuffer[0], tileWidth + mirrorNwidth - effectiveBuffer[3] + effectiveBuffer[2]);
-						/*
-						System.out.println("demirrored");
-						System.out.println(intermed.rows());
-						System.out.println(intermed.columns());
-						System.out.println("debuffer inds");
-						System.out.println(effectiveBuffer[0]);
-						System.out.println(effectiveBuffer[2]);
-						System.out.println(effectiveBuffer[0] + tileHeight);
-						System.out.println(effectiveBuffer[2] + tileWidth);
-						*/
 						//slice out buffer zone, (fromrow fromcolumn torow tocolumn)
 						intermed = intermed.slice(effectiveBuffer[0], effectiveBuffer[2], effectiveBuffer[0] + tileHeight + rowsAdded, effectiveBuffer[2] + tileWidth + colsAdded);
-						/*
-						System.out.println("debuffered");
-						System.out.println(intermed.rows());
-						System.out.println(intermed.columns());
-						System.out.println("tileSum");
-						System.out.println(intermed.sum());
-						*/
 					}
 					else {
 						//make zero matrix if is all black
@@ -375,11 +310,7 @@ public class AxoNet implements Command {
 							floatDensityOutput[i1+i*tileHeight][j1+j*tileWidth]=slice[i1][j1];
 						}
 					}
-					
-					
-					
-					
-					
+					//print update if at the end of a row
 					if (j==0) {
 						msg = (Double.toString(100*i/(tileCountRow)) + "% percent finished with applying to full image.");
 						log.log(LogLevel.INFO, msg);
@@ -409,6 +340,17 @@ public class AxoNet implements Command {
 			fullOutput=fullOutput.divide(1000); //divide by 1000 to undo output scaling used during model training
 			//calculate full image axon count
 			double sum = fullOutput.sum();
+			//TODO print to .csv
+			
+			if (csvOut) {
+				ResultsTable densityMap = new ResultsTable();
+				for (int i=0; i<fullOutput.rows(); i++) {
+					for (int j=0; j<fullOutput.columns(); j++) {
+						densityMap.setValue(j, i, fullOutput.get(i,j));
+					}
+				}
+				densityMap.show("Density Map");
+			}
 			//scale for eace of viewing and convert this full matrix back to double array
 			if (fullOutput.max()>0) {
 				fullOutput=fullOutput.divide(fullOutput.max()/2);
@@ -463,7 +405,7 @@ public class AxoNet implements Command {
 	    	for (int i = 0; i < in.rows(); i++) {
 				  for (int j = 0; j < in.columns(); j++) {
 					  double val = in.get(i, j);
-					  if ((val<.84)&(val>.10)) {
+					  if ((val<.94)&(val>.04)) {
 						  values[0] = values[0] + val;
 						  n=n+1;
 					  }
@@ -477,7 +419,7 @@ public class AxoNet implements Command {
 	    	for (int i = 0; i < in.rows(); i++) {
 				  for (int j = 0; j < in.columns(); j++) {
 					  double val = in.get(i, j);
-					  if ((val<.84)&(val>.10)) {
+					  if ((val<.94)&(val>.04)) {
 						  diffs = diffs + Math.pow((val - values[0]),2);
 						  n=n+1;
 					  }
