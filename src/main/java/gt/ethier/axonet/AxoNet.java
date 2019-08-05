@@ -56,7 +56,7 @@ public class AxoNet implements Command {
 		private static final String DEFAULT_SERVING_SIGNATURE_DEF_KEY ="serving_default"; //leave unchanged
 		//decide me. must be multiple of 16
 		private static final int patchBuffer = 64;
-		private static final int TILE_SIZE =224;//-patchBuffer*2; //mess with this to optimize performance. Should keep around 256, must be multiple of 32.
+		private static final int TILE_SIZE =224;//-patchBuffer*2; //mess with this to optimize performance. Should keep around 256, must be multiple of 32. Is actually a minimum size.
 		//define services for our plugin
 		@Parameter
 		private static TensorFlowService tensorFlowService; //service for working with tensorflow    https://javadoc.scijava.org/ImageJ/net/imagej/tensorflow/TensorFlowService.html

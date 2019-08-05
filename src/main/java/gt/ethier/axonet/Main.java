@@ -26,7 +26,7 @@ public final class Main {
 		final Object data = ij.io().open(file.getAbsolutePath());
 		ij.ui().show(data);
 		// Run the command.
-		ij.command().run(AxoNet.class, true);
+		ij.command().run(AxoNet.class, true);//, "csvOut", true, "Scale", 15.7);
 	}
 }
 
