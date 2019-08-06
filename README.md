@@ -14,7 +14,7 @@ AxoNet produces axon count estimates with high accuracy and is robust to image q
 2. Navigate to **"Help > "Update..."** on the Fiji toolbar to add AxoNet and Tensorflow to your update sites   
 	- *If this triggers automatic updates, wait for them to load. Restart Fiji when prompted __before starting step 2 again__*  
 	- Click **"Manage update sites"**  
-	- Scroll down and click the check box next to **"AxoNetw"**   
+	- Scroll down and click the check box next to **"AxoNet"**   
 	- Scroll down and click the check box next to **"TensorFlow"**   
 	- Close the **"manage update sites"** window and click **"Apply changes"**    
 	
