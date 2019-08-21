@@ -67,7 +67,7 @@ public class AxoNet implements Command {
 		//@Parameter(label = "Optic Nerve Cross Section")
 		//private Img<T> originalImage;
 		@Parameter(label = "<html>What scale is your image, in pixels per micron? " + "\nIf you don't know just hit OK.", persist = false,                          
-				description = "<html>What scale is your image, in pixels per micron?", min = "10", max = "20")
+				description = "<html>What scale is your image, in pixels per micron?", min = "10", max = "30")
 			private double Scale = 15.7;
 		@Parameter(label = "<html>Do you want the pixelwise density map output to a results table? This can be exported as .csv.", persist = false,                          
 				description = "<html> prints result count density to a results table")
