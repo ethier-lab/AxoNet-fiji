@@ -106,14 +106,14 @@ public class AxoNet implements Command {
 				grayscale=grayscale.resize((int) Math.round(compensate*width), (int) Math.round(compensate*height));
 			}
 			catch (Exception e) {
-				String msg = ("Error- Image was not resized. Contining with original image.\n");
+				String msg = ("Error- Image was not resized. Continuing with original image.\n");
 				log.log(LogLevel.INFO, msg);
 			}
 			
 			//check scale from input
 			IJ.run("Set Scale...", "distance=" + Double.toString(15.7) + " known=1 unit=micron");
 			
-			//redefine full iamge sizing after scaling
+			//redefine full image sizing after scaling
 			height = grayscale.getHeight();
 			width = grayscale.getWidth();
 			progress.setProcessor(grayscale);
@@ -172,8 +172,6 @@ public class AxoNet implements Command {
 			Matrix fullOutput= Matrix.zero(height, width);
 			float[][] floatDensityOutput = new float[height][width];
 			
-			
-			
 			long start = System.nanoTime();
 			for (int i=0; i< tileCountRow; i++) {
 				for (int j=0; j< tileCountCol; j++) {
@@ -185,8 +183,8 @@ public class AxoNet implements Command {
 					int colsAdded = 0;
 					
 					//define bounds of the original image to convert to a density map
-					r1[0]=i*tileHeight;
-					r1[1]=(i+1)*tileHeight;
+					r1[0]=i*tileHeight; //start row
+					r1[1]=(i+1)*tileHeight; //end row
 					c1[0]=j*tileWidth;
 					c1[1]=(j+1)*tileWidth;
 					//Define bounds to process in order to result in the bounds above. These are the originals with the added patchbuffer width where available.
@@ -229,21 +227,34 @@ public class AxoNet implements Command {
 						thisIm=thisIm.divide(thisIm.max());
 						double tot=thisIm.sum();
 						//see if total is greater than the total if full buffered tile is above .9 of maximum intensity
-						if ((tot>.94*(c[1]-c[0])*(r[1]-r[0])) | (tot<.04*(c[1]-c[0])*(r[1]-r[0])))  {
-							//leave this tile alone if mostly white or black, is likely background
+						boolean check1=(tot>.94*(c[1]-c[0])*(r[1]-r[0])) | (tot<.04*(c[1]-c[0])*(r[1]-r[0]));
+						//see if tile is all ones and zeros
+						//Matrix checker=thisIm.add(-.5);
+						//checker=checker.hadamardProduct(checker);
+						//tot=checker.sum();
+						//boolean check2=(tot==.25*(c[1]-c[0])*(r[1]-r[0]));
+						//log.log(LogLevel.INFO, thisIm.sum());
+						if (check1)  {
+							//leave this tile alone if mostly white and/or black, is likely background
+							log.log(LogLevel.INFO, "line 235");
 						}
 						else {
 							//normalize image by subtracting mean pixel value and dividing by 2*SD of pixel value. This makes output about [-1,1]
 							double[] SumStd = modSumStd(thisIm);
-							if (SumStd[1]!=0) {
+													
+							//make sure not NaN or 0
+							if (SumStd[1]!=0 && !Double.isNaN(SumStd[1])) {
 								thisIm=thisIm.subtract(SumStd[0]).divide(SumStd[1]*2);
 							}
-							//if stdev of image = 0, then something weird happened. use standard interior stdev as stand-in
+							//if stdev of image = 0 or NaN, then something weird happened. use average interior stdev and average as stand-in.
 							else {
-								thisIm=thisIm.subtract(SumStd[0]).divide(.15);
+								thisIm=thisIm.subtract(.55).divide(.15);
 							}
 							
 						}
+						
+						
+						
 						//TODO: vectorize this?
 						//makes bounded by [-1,1]
 						for (int i1=0; i1 < thisIm.rows(); i1++) {
@@ -340,7 +351,7 @@ public class AxoNet implements Command {
 			fullOutput=fullOutput.divide(1000); //divide by 1000 to undo output scaling used during model training
 			//calculate full image axon count
 			double sum = fullOutput.sum();
-			//TODO print to .csv
+			//print to .csv
 			
 			if (csvOut) {
 				ResultsTable densityMap = new ResultsTable();
@@ -351,7 +362,7 @@ public class AxoNet implements Command {
 				}
 				densityMap.show("Density Map");
 			}
-			//scale for eace of viewing and convert this full matrix back to double array
+			//scale for ease of viewing and convert this full matrix back to double array
 			if (fullOutput.max()>0) {
 				fullOutput=fullOutput.divide(fullOutput.max()/2);
 			}
@@ -377,7 +388,7 @@ public class AxoNet implements Command {
 			//show.updateResults();
 			show.show("Axon Count Results");
 			
-			//make overaly image output
+			//make overlay image output
 			ImagePlus[] stack = new ImagePlus[7];
 			stack[3]=progress;
 			stack[5]=display;
