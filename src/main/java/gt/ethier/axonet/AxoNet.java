@@ -236,7 +236,7 @@ public class AxoNet implements Command {
 						//log.log(LogLevel.INFO, thisIm.sum());
 						if (check1)  {
 							//leave this tile alone if mostly white and/or black, is likely background
-							log.log(LogLevel.INFO, "line 235");
+							//log.log(LogLevel.INFO, "line 239");
 						}
 						else {
 							//normalize image by subtracting mean pixel value and dividing by 2*SD of pixel value. This makes output about [-1,1]
