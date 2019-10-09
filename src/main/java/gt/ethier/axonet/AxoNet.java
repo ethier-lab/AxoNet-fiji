@@ -56,7 +56,7 @@ public class AxoNet implements Command {
 		private static final String DEFAULT_SERVING_SIGNATURE_DEF_KEY ="serving_default"; //leave unchanged
 		//decide me. must be multiple of 16
 		private static final int patchBuffer = 64;
-		private static final int TILE_SIZE =224;//-patchBuffer*2; //mess with this to optimize performance. Should keep around 256, must be multiple of 32. Is actually a minimum size.
+		private static final int TILE_SIZE =288;//-patchBuffer*2; //mess with this to optimize performance. Should keep around 256, must be multiple of 32. Is actually a minimum size.
 		//define services for our plugin
 		@Parameter
 		private static TensorFlowService tensorFlowService; //service for working with tensorflow    https://javadoc.scijava.org/ImageJ/net/imagej/tensorflow/TensorFlowService.html
@@ -226,9 +226,11 @@ public class AxoNet implements Command {
 						//normalize by max to get [0,1] scale
 						thisIm=thisIm.divide(thisIm.max());
 						double tot=thisIm.sum();
-						//see if total is greater than the total if full buffered tile is above .9 of maximum intensity
+						//see if total is greater than the total if full buffered tile is above .9 of maximum intensity or below .04 of maximum.
+						//this is if effect checking for tiles of mostly black or white pixels
 						boolean check1=(tot>.94*(c[1]-c[0])*(r[1]-r[0])) | (tot<.04*(c[1]-c[0])*(r[1]-r[0]));
 						//see if tile is all ones and zeros
+						
 						//Matrix checker=thisIm.add(-.5);
 						//checker=checker.hadamardProduct(checker);
 						//tot=checker.sum();
@@ -236,11 +238,11 @@ public class AxoNet implements Command {
 						//log.log(LogLevel.INFO, thisIm.sum());
 						if (check1)  {
 							//leave this tile alone if mostly white and/or black, is likely background
-							//log.log(LogLevel.INFO, "line 239");
+							//log.log(LogLevel.INFO, "line 240");
 						}
 						else {
 							//normalize image by subtracting mean pixel value and dividing by 2*SD of pixel value. This makes output about [-1,1]
-							double[] SumStd = modSumStd(thisIm);
+							double[] SumStd = modSumStd(thisIm); //TODO check
 													
 							//make sure not NaN or 0
 							if (SumStd[1]!=0 && !Double.isNaN(SumStd[1])) {
@@ -437,6 +439,39 @@ public class AxoNet implements Command {
 				  }
 			 }
 	    	values[1] = Math.sqrt(diffs/n);
+	    	
+	    	
+			return values;
+	    }
+	    
+	    double[] modSumStd2(Matrix in) {
+	    	double[] values = new double[2];
+	    	int n = 0;
+	    	Vector band= Vector.zero(in.columns()*in.rows());
+	    	
+	    	for (int i = 0; i < in.rows(); i++) {
+				  for (int j = 0; j < in.columns(); j++) {
+					  double val = in.get(i, j);
+					  if ((val<.94)&(val>.04)) {
+						  band.set(n, val);
+						  n=n+1;
+					  }
+				  }
+			 }
+	    	//compute average
+	    	//log.log(LogLevel.INFO, "n: " + String.valueOf(n));
+	    	if (n==0) {values[0]=.55; values[1]=.15; return values;}
+	    	
+	    	values[0]=band.sum()/n;
+	    	//log.log(LogLevel.INFO, "mean: " + String.valueOf(values[0]));
+	    	//make difference vector
+	    	Vector diffs = band.subtract(values[0]);
+	    	//square it
+	    	diffs=diffs.hadamardProduct(diffs);
+	    	//finish sdev calculation
+	    	//log.log(LogLevel.INFO, "diffs sum: " + String.valueOf(diffs.sum()));
+	    	
+	    	values[1] = Math.sqrt(diffs.sum()/n);
 	    	
 	    	
 			return values;
