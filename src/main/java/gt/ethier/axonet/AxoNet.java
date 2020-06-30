@@ -36,7 +36,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.util.Objects;
 
-
+//TODO replace if possible
 import org.la4j.Matrix;
 import org.la4j.Vector;
 
@@ -50,7 +50,7 @@ public class AxoNet implements Command {
 		//define model identifiers
 		//explained in https://www.tensorflow.org/api_docs/python/tf/saved_model/simple_save
 		private static final String MODEL_URL = "https://github.com/ethier-lab/AxoNet-fiji/raw/master/AxoNet-model.zip"; //downloads model from our github
-		private static final String MODEL_NAME = "model_3"; 
+		private static final String MODEL_NAME = "model_11"; 
 		// Same as the tag used in export_saved_model in the Python code.
 		private static final String MODEL_TAG = "serve";  //check when saving model
 		private static final String DEFAULT_SERVING_SIGNATURE_DEF_KEY ="serving_default"; //leave unchanged
@@ -309,6 +309,7 @@ public class AxoNet implements Command {
 						intermed = Matrix.from2DArray(toDoubleArray(removeDims(dst))).slice(mirrorNheight, mirrorNwidth, tileHeight + mirrorNheight - effectiveBuffer[1] + effectiveBuffer[0], tileWidth + mirrorNwidth - effectiveBuffer[3] + effectiveBuffer[2]);
 						//slice out buffer zone, (fromrow fromcolumn torow tocolumn)
 						intermed = intermed.slice(effectiveBuffer[0], effectiveBuffer[2], effectiveBuffer[0] + tileHeight + rowsAdded, effectiveBuffer[2] + tileWidth + colsAdded);
+						double isum = intermed.sum(); //FOR CHECKING FOR INF/NAN VALUES
 					}
 					else {
 						//make zero matrix if is all black
@@ -401,16 +402,13 @@ public class AxoNet implements Command {
 			
 		}
 			
-		
-		
-		
-		
+		//TODO make much faster PLEASE
 	    /**
 	     * Computes modified mean and standard deviation of image intensity 
 	     *(does not consider brightest regions)
 	     * 
 	     *
-	     * 
+	     *
 	     */
 	    double[] modSumStd(Matrix in) {
 	    	double[] values = new double[2];
@@ -632,9 +630,3 @@ public class AxoNet implements Command {
 		}
 		
 }
-
-
-
-
-
-
