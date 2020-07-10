@@ -49,7 +49,7 @@ public class AxoNet implements Command {
 		
 		//define model identifiers
 		//explained in https://www.tensorflow.org/api_docs/python/tf/saved_model/simple_save
-		private static final String MODEL_URL = "https://github.com/ethier-lab/AxoNet-fiji/raw/master/AxoNet-model.zip"; //downloads model from our github
+		private static final String MODEL_URL = "https://drive.google.com/uc?export=download&id=1pjLm13tMq_O7DwUUVw1h8d5vYuOuZAcT"; //downloads model from our google drive
 		private static final String MODEL_NAME = "model_11"; 
 		// Same as the tag used in export_saved_model in the Python code.
 		private static final String MODEL_TAG = "serve";  //check when saving model
