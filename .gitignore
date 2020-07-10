@@ -2,7 +2,7 @@
 *.mat
 *.npy
 /models
-
+/export_model
 # Maven #
 /target/
 
