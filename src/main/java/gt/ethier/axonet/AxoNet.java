@@ -16,6 +16,7 @@ import net.imagej.DatasetService;
 import ij.CompositeImage;
 import ij.IJ;
 import net.imagej.tensorflow.TensorFlowService;
+//import net.imagej.tensorflow.CachedModelBundle;
 //import net.imglib2.type.numeric.RealType;
 
 import org.scijava.Priority;
@@ -49,10 +50,13 @@ public class AxoNet implements Command {
 		
 		//define model identifiers
 		//explained in https://www.tensorflow.org/api_docs/python/tf/saved_model/simple_save
-		private static final String MODEL_URL = "https://drive.google.com/uc?export=download&id=18zYR-sNUhY0txKsvLBYbVltssAynN0Jp"; //downloads model from our google drive
-		private static final String MODEL_NAME = "model_11"; 
+		private static final String MODEL_URL = "https://drive.google.com/u/0/uc?export=download&confirm=dL3K&id=18zYR-sNUhY0txKsvLBYbVltssAynN0Jp"; //downloads model from our google drive
+		private static final String MODEL_NAME = "model_1"; 
+		//private static final String MODEL_URL = "https://drive.google.com/u/0/uc?export=download&confirm=NSZm&id=1pjLm13tMq_O7DwUUVw1h8d5vYuOuZAcT"; //downloads model from our google drive
+		//private static final String MODEL_NAME = "model_3"; 
 		// Same as the tag used in export_saved_model in the Python code.
 		private static final String MODEL_TAG = "serve";  //check when saving model
+		//private static final String MODEL_TAG = "inference";  //check when saving model
 		private static final String DEFAULT_SERVING_SIGNATURE_DEF_KEY ="serving_default"; //leave unchanged
 		//decide me. must be multiple of 16
 		private static final int patchBuffer = 64;
@@ -501,7 +505,8 @@ public class AxoNet implements Command {
 			  return ret;
 			}
 		
-		
+		//code for loading in model
+		//TODO fix me please
 		 private static SavedModelBundle getModel() {
 				//load model
 				HTTPLocation source = null;
@@ -631,3 +636,6 @@ public class AxoNet implements Command {
 		}
 		
 }
+
+//CachedModelBundle bundl = null;
+//try {model = loadCachedModel(source, MODEL_NAME, MODEL_TAG);}
