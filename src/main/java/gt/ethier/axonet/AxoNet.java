@@ -52,8 +52,8 @@ public class AxoNet implements Command {
 		
 		//define model identifiers
 		//explained in https://www.tensorflow.org/api_docs/python/tf/saved_model/simple_save
-		//private static final String MODEL_URL = "https://drive.google.com/u/0/uc?export=download&confirm=dL3K&id=18zYR-sNUhY0txKsvLBYbVltssAynN0Jp"; //downloads model from our google drive\
-		private static final String MODEL_URL = "https://github.com/ethier-lab/AxoNet-fiji/raw/master/export_model.zip";
+		private static final String MODEL_URL = "https://www.wrek.org/export_model.zip"; //downloads model from our server
+		//private static final String MODEL_URL = "https://github.com/ethier-lab/AxoNet-fiji/raw/master/export_model.zip";
 		private static final String MODEL_NAME = "model_1"; 
 		//private static final String MODEL_URL = "https://drive.google.com/u/0/uc?export=download&confirm=NSZm&id=1pjLm13tMq_O7DwUUVw1h8d5vYuOuZAcT"; //downloads model from our google drive
 		//private static final String MODEL_NAME = "model_3"; 
@@ -86,7 +86,6 @@ public class AxoNet implements Command {
 			//display error level to get the log to open
 			log.error("Opening log window...\n");
 			log.log(LogLevel.INFO, "AxoNet is running now!");
-			log.log(LogLevel.INFO, tensorFlowService.getTensorFlowVersion());
 			//load image
 			ImagePlus img = WindowManager.getCurrentImage(); 
 			//warn if no image is loaded
@@ -516,8 +515,8 @@ public class AxoNet implements Command {
 				HTTPLocation source = null;
 				SavedModelBundle model = null;
 				try {source = new HTTPLocation(MODEL_URL);} catch (final Exception e) {log.error(e);}
-				//try {model = tensorFlowService.loadModel(source, MODEL_NAME, MODEL_TAG);}
-				try {model = tensorFlowService.loadCachedModel(source, MODEL_NAME, MODEL_TAG).model();}
+				try {model = tensorFlowService.loadModel(source, MODEL_NAME, MODEL_TAG);}
+				//try {model = tensorFlowService.loadCachedModel(source, MODEL_NAME, MODEL_TAG).model();}
 				catch (final Exception e) { log.error(e);} // Use the LogService to report the error
 				log.log(LogLevel.INFO, "saved the new model" + "\n\n\n");
 				return model;
