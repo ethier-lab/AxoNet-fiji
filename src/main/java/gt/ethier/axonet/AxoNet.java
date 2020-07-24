@@ -16,6 +16,7 @@ import net.imagej.DatasetService;
 import ij.CompositeImage;
 import ij.IJ;
 import net.imagej.tensorflow.TensorFlowService;
+//import net.imagej.tensorflow.CachedModelBundle
 //import net.imagej.tensorflow.CachedModelBundle;
 //import net.imglib2.type.numeric.RealType;
 
@@ -26,6 +27,7 @@ import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.log.LogLevel;
+
 
 import org.tensorflow.SavedModelBundle;
 import org.tensorflow.Tensor;
@@ -512,7 +514,8 @@ public class AxoNet implements Command {
 				HTTPLocation source = null;
 				SavedModelBundle model = null;
 				try {source = new HTTPLocation(MODEL_URL);} catch (final Exception e) {log.error(e);}
-				try {model = tensorFlowService.loadModel(source, MODEL_NAME, MODEL_TAG);}
+				//try {model = tensorFlowService.loadModel(source, MODEL_NAME, MODEL_TAG);}
+				try {model = tensorFlowService.loadCachedModel(source, MODEL_NAME, MODEL_TAG).model();}
 				catch (final Exception e) { log.error(e);} // Use the LogService to report the error
 				log.log(LogLevel.INFO, "saved the new model" + "\n\n\n");
 				return model;
